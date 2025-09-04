@@ -2,6 +2,41 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js 18+ 
+- Docker and Docker Compose
+- MongoDB (via Docker or local installation)
+
+### Environment Setup
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```bash
+# MongoDB Configuration
+MONGODB_URI=mongodb://admin:password@localhost:27017/graph_gpt?authSource=admin
+
+# OpenAI Configuration (if needed)
+# OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### Starting MongoDB
+
+To start MongoDB using Docker Compose:
+
+```bash
+npm run start:mongodb
+```
+
+This will start MongoDB on port 27017 with the following default credentials:
+- Username: `admin`
+- Password: `password`
+- Database: `graph_gpt`
+
+You can also access MongoDB Express (web interface) at [http://localhost:8081](http://localhost:8081) with credentials `admin/admin`.
+
+### Development Server
+
 First, run the development server:
 
 ```bash
