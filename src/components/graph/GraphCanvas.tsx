@@ -76,10 +76,10 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     if (nodes.length > 0) {
       // Small delay to ensure DOM is updated
       setTimeout(() => {
-        const reactFlowInstance = document.querySelector('.react-flow');
+        const reactFlowInstance = document.querySelector(".react-flow");
         if (reactFlowInstance) {
           // Trigger fitView programmatically
-          const event = new CustomEvent('fitView');
+          const event = new CustomEvent("fitView");
           reactFlowInstance.dispatchEvent(event);
         }
       }, 100);
@@ -128,12 +128,12 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         preventScrolling={false}
         className="w-full h-full"
         style={{
-          width: '100%',
-          height: '100%',
-          minHeight: '100vh',
+          width: "100%",
+          height: "100%",
+          minHeight: "100vh",
         }}
       >
-        <Controls 
+        <Controls
           position="top-right"
           showInteractive={false}
           className="bg-white shadow-lg border border-gray-200 rounded-lg"

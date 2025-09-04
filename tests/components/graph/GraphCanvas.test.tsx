@@ -6,41 +6,39 @@ import { Conversation } from "@/types";
 // Mock React Flow
 jest.mock("reactflow", () => {
   const React = require("react");
-  
-  const MockReactFlow = React.forwardRef(({
-    children,
-    onNodeClick,
-    onEdgeClick,
-    nodes,
-    edges,
-    ...props
-  }: any, ref: any) => (
-    <div data-testid="react-flow" ref={ref} {...props}>
-      {children}
-      <div data-testid="nodes">
-        {nodes?.map((node: any) => (
-          <div
-            key={node.id}
-            data-testid={`node-${node.id}`}
-            onClick={(e) => onNodeClick?.(e, node)}
-          >
-            {node.data?.label}
-          </div>
-        )) || []}
+
+  const MockReactFlow = React.forwardRef(
+    (
+      { children, onNodeClick, onEdgeClick, nodes, edges, ...props }: any,
+      ref: any
+    ) => (
+      <div data-testid="react-flow" ref={ref} {...props}>
+        {children}
+        <div data-testid="nodes">
+          {nodes?.map((node: any) => (
+            <div
+              key={node.id}
+              data-testid={`node-${node.id}`}
+              onClick={(e) => onNodeClick?.(e, node)}
+            >
+              {node.data?.label}
+            </div>
+          )) || []}
+        </div>
+        <div data-testid="edges">
+          {edges?.map((edge: any) => (
+            <div
+              key={edge.id}
+              data-testid={`edge-${edge.id}`}
+              onClick={(e) => onEdgeClick?.(e, edge)}
+            >
+              {edge.source} → {edge.target}
+            </div>
+          )) || []}
+        </div>
       </div>
-      <div data-testid="edges">
-        {edges?.map((edge: any) => (
-          <div
-            key={edge.id}
-            data-testid={`edge-${edge.id}`}
-            onClick={(e) => onEdgeClick?.(e, edge)}
-          >
-            {edge.source} → {edge.target}
-          </div>
-        )) || []}
-      </div>
-    </div>
-  ));
+    )
+  );
 
   const MockReactFlowProvider = ({ children }: any) => (
     <div data-testid="react-flow-provider">{children}</div>
