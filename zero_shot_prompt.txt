@@ -1,0 +1,59 @@
+The current way to interact with LLMs is with linear chats. As humans we don't think linearly, a lot of times a graph it's a better representation of how we think.
+
+The goal of this project is to create a graph-style UI for interacting with LLMs.
+
+I want to create a UI using react flow.
+The user starts from a new empty canvas and there one default node is created already.
+
+This node has a textbox like chatgpt with "What do you have in mind?" and a "Submit" button on the right. This is already a node.
+
+Once the user clicks on submit, the message from the user is displayed, the submit bar disappears, a new loading state is shown with loading and "Generating...".
+
+The user query is submitted to an LLM in a Next.js route which streams the output back in Markdown format.
+The node will now contain a user query, a small separator and the streamed llm output as markdown.
+
+
+Then, once streaming is complete, a new button will appear at the bottom of the node with a circular + button. When clicked this spawns a new node with default state (the search bar).
+
+The + buttons can be clicked multiple times as the user can continue the conversation in multiple branches. 
+
+When the user clicks submit on this new node, the graph will be traversed, flattened as list of user/assistant pairs (each node is one), and sent to the LLM.
+
+
+When I click on a node in the graph, it becomes "active".
+
+Each node, by default has a light-gray background cor.
+
+All the active nodes have white background color. When I click on a node, the nodes from the current node up to the source, becomes active and are used as input for the conversation.
+
+The node input is always on top and that's how it can be connected. 
+
+
+The node outputs can be from the bottom (the + button) or from the left/right. 
+
+The output points from the side are based on the markdown. Each markdown element can be a starting pint. When the user hovers an element on the markdown, the anchor appears and you can start the next node from here. 
+
+If you start the conversation starts from a side (with the anchor of a markdown node), when you send the user message, you need to prepend it (on the backend) with "this message is related to ${node content}". 
+
+
+The edges are customizable. Apart from the possibility of create a new node from the side of the bottom, I can also update the edges.
+
+The button on the bottom or on the side is split into two buttons: a + which creates a new empty node with the search and connects it automatically, and another button which is used to spawn a new edge that I can connect to the top of a new node. 
+
+
+On the top-left of the canvas there is a chat title. The chat title can be renamed. 
+
+The default title of the conversation is the current time in ISO string. 
+
+I the homepage, you can see the list of graph conversations and you can click on it. Each conversation is at /chat/id
+
+When I click on the chat the canvas is loaded.
+
+Each time something changes in the nodes, the full status of the conversation is sync with the backend.
+
+You need to store the full graph with nodes, edges, position, conversations and everything else.
+
+
+The database has only one entity which is the conversation. Use Mongodb to store the full conversation json. Use mongoose to store all the data. Create shared types for the backend and frontend. 
+
+The conversation schema is the source of truth. The canvas UI is the way to show the conversation using react flow. 
