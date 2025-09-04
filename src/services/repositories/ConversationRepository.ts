@@ -8,7 +8,9 @@ export class ConversationRepository {
   }
 
   private convertToConversation(doc: unknown): Conversation {
-    const docObj = doc as Record<string, unknown>;
+    // Ensure we have a plain object by serializing and parsing
+    const serialized = JSON.parse(JSON.stringify(doc));
+    const docObj = serialized as Record<string, unknown>;
     return {
       ...docObj,
       id: docObj.id as string,
@@ -28,7 +30,9 @@ export class ConversationRepository {
       });
 
       const savedConversation = await conversation.save();
-      const conversationObj = savedConversation.toObject();
+
+      // Convert to plain object to avoid serialization issues
+      const conversationObj = JSON.parse(JSON.stringify(savedConversation));
 
       return {
         ...conversationObj,
@@ -281,7 +285,9 @@ export class ConversationRepository {
 
       if (!updatedConversation) return null;
 
-      return this.convertToConversation(updatedConversation.toObject());
+      // Convert to plain object to avoid serialization issues
+      const conversationObj = JSON.parse(JSON.stringify(updatedConversation));
+      return this.convertToConversation(conversationObj);
     } catch (error) {
       throw new Error(
         `Failed to delete node from conversation: ${

@@ -106,11 +106,6 @@ ConversationSchema.pre("save", function (next) {
   next();
 });
 
-// Create indexes
-ConversationSchema.index({ id: 1 }, { unique: true });
-ConversationSchema.index({ createdAt: -1 });
-ConversationSchema.index({ updatedAt: -1 });
-
 // Create and export the model
 export const ConversationModel =
   mongoose.models.Conversation ||
