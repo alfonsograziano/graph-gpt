@@ -6,7 +6,7 @@ const conversationService = new ConversationService();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse>> {
   try {
     const { id } = await params;
@@ -56,10 +56,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id || id.trim().length === 0) {
       return NextResponse.json(
@@ -125,10 +125,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id || id.trim().length === 0) {
       return NextResponse.json(

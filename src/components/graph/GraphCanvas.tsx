@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import ReactFlow, {
   Node,
   Edge,
@@ -13,9 +13,10 @@ import ReactFlow, {
   NodeTypes,
   EdgeTypes,
   ReactFlowProvider,
+  PanOnScrollMode,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Conversation } from "@/types";
+import { Conversation, ReactFlowNode, ReactFlowEdge } from "@/types";
 
 interface GraphCanvasProps {
   conversation: Conversation;
@@ -38,7 +39,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onEdgeClick,
 }) => {
   // Transform conversation data to React Flow format
-  const initialNodes: Node[] = useMemo(() => {
+  const initialNodes: ReactFlowNode[] = useMemo(() => {
     return conversation.nodes.map((node) => ({
       id: node.id,
       type: "default",
@@ -53,7 +54,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     }));
   }, [conversation.nodes]);
 
-  const initialEdges: Edge[] = useMemo(() => {
+  const initialEdges: ReactFlowEdge[] = useMemo(() => {
     return conversation.edges.map((edge) => ({
       id: edge.id,
       source: edge.sourceNodeId,
@@ -67,8 +68,23 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     }));
   }, [conversation.edges]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+
+  // Auto-fit view when nodes change
+  useEffect(() => {
+    if (nodes.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        const reactFlowInstance = document.querySelector('.react-flow');
+        if (reactFlowInstance) {
+          // Trigger fitView programmatically
+          const event = new CustomEvent('fitView');
+          reactFlowInstance.dispatchEvent(event);
+        }
+      }, 100);
+    }
+  }, [nodes.length]);
 
   const onNodeClickHandler = useCallback(
     (event: React.MouseEvent, node: Node) => {
@@ -85,7 +101,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   );
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full min-h-screen bg-gray-50">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -101,9 +117,27 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
           padding: 0.1,
           includeHiddenNodes: false,
         }}
-        className="bg-gray-50"
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        panOnDrag={true}
+        panOnScroll={true}
+        panOnScrollMode={PanOnScrollMode.Free}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        preventScrolling={false}
+        className="w-full h-full"
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '100vh',
+        }}
       >
-        <Controls />
+        <Controls 
+          position="top-right"
+          showInteractive={false}
+          className="bg-white shadow-lg border border-gray-200 rounded-lg"
+        />
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}

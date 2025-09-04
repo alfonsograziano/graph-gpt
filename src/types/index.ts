@@ -4,6 +4,32 @@ export interface Position {
   y: number;
 }
 
+// React Flow specific types
+export interface ReactFlowNode {
+  id: string;
+  type: string;
+  position: Position;
+  data: {
+    label: string;
+    userMessage: string;
+    assistantResponse: string;
+    type: NodeType;
+    createdAt: Date;
+  };
+}
+
+export interface ReactFlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  data: {
+    type: EdgeType;
+    createdAt: Date;
+    metadata?: EdgeMetadata;
+  };
+}
+
 // Node types
 export type NodeType = "input" | "loading" | "completed";
 

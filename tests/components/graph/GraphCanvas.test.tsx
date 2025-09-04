@@ -5,28 +5,31 @@ import { Conversation } from "@/types";
 
 // Mock React Flow
 jest.mock("reactflow", () => {
-  const MockReactFlow = ({
+  const React = require("react");
+  
+  const MockReactFlow = React.forwardRef(({
     children,
     onNodeClick,
     onEdgeClick,
     nodes,
     edges,
-  }: any) => (
-    <div data-testid="react-flow">
+    ...props
+  }: any, ref: any) => (
+    <div data-testid="react-flow" ref={ref} {...props}>
       {children}
       <div data-testid="nodes">
-        {nodes.map((node: any) => (
+        {nodes?.map((node: any) => (
           <div
             key={node.id}
             data-testid={`node-${node.id}`}
             onClick={(e) => onNodeClick?.(e, node)}
           >
-            {node.data.label}
+            {node.data?.label}
           </div>
-        ))}
+        )) || []}
       </div>
       <div data-testid="edges">
-        {edges.map((edge: any) => (
+        {edges?.map((edge: any) => (
           <div
             key={edge.id}
             data-testid={`edge-${edge.id}`}
@@ -34,10 +37,10 @@ jest.mock("reactflow", () => {
           >
             {edge.source} → {edge.target}
           </div>
-        ))}
+        )) || []}
       </div>
     </div>
-  );
+  ));
 
   const MockReactFlowProvider = ({ children }: any) => (
     <div data-testid="react-flow-provider">{children}</div>
@@ -94,7 +97,9 @@ const mockConversation: Conversation = {
       createdAt: new Date("2024-01-01"),
     },
   ],
-  metadata: {},
+  metadata: {
+    nodeCount: 2,
+  },
 };
 
 describe("GraphCanvas", () => {
@@ -157,7 +162,9 @@ describe("GraphCanvas", () => {
       updatedAt: new Date("2024-01-01"),
       nodes: [],
       edges: [],
-      metadata: {},
+      metadata: {
+        nodeCount: 0,
+      },
     };
 
     render(<GraphCanvas conversation={emptyConversation} />);
