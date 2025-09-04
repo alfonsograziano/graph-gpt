@@ -9,7 +9,7 @@ This unified approach combines what would traditionally be separate backend and 
 ### Starter Template or Existing Project
 
 **Decision:** N/A - Greenfield project  
-**Approach:** Standard Next.js 14+ with TypeScript, MongoDB integration, and React Flow for graph visualization
+**Approach:** Standard Next.js 15+ with TypeScript, MongoDB integration, and React Flow for graph visualization
 
 ### Change Log
 
@@ -21,7 +21,7 @@ This unified approach combines what would traditionally be separate backend and 
 
 ### Technical Summary
 
-Graph-GPT implements a modern fullstack architecture using Next.js 14+ with App Router for seamless frontend-backend integration. The system leverages MongoDB for flexible graph data storage, React Flow for interactive graph visualization, and OpenAI API integration for streaming LLM responses. The architecture follows a monorepo structure with shared TypeScript types, enabling rapid development of the graph-based conversation interface. Deployment utilizes Vercel's serverless platform for optimal performance and scalability, with real-time state synchronization ensuring consistent graph state across sessions.
+Graph-GPT implements a modern fullstack architecture using Next.js 15+ with App Router for seamless frontend-backend integration. The system leverages MongoDB for flexible graph data storage, React Flow for interactive graph visualization, and OpenAI API integration for streaming LLM responses. The architecture follows a monorepo structure with shared TypeScript types, enabling rapid development of the graph-based conversation interface. Deployment utilizes Vercel's serverless platform for optimal performance and scalability, with real-time state synchronization ensuring consistent graph state across sessions.
 
 ### Platform and Infrastructure Choice
 
@@ -93,11 +93,11 @@ graph TB
 | Category | Technology | Version | Purpose | Rationale |
 |----------|------------|---------|---------|-----------|
 | Frontend Language | TypeScript | 5.3+ | Type-safe development | Ensures consistency between frontend and backend |
-| Frontend Framework | Next.js | 14+ | Full-stack React framework | Built-in API routes, App Router, and optimization |
+| Frontend Framework | Next.js | 15+| Full-stack React framework | Built-in API routes, App Router, and optimization |
 | UI Component Library | React Flow | 11+ | Graph visualization | Specialized for node-based interfaces |
 | State Management | React Context + useReducer | Built-in | Graph state management | Predictable state updates for complex graph operations |
 | Backend Language | TypeScript | 5.3+ | Unified language | Shared types and consistent development experience |
-| Backend Framework | Next.js API Routes | 14+ | Serverless functions | Seamless integration with frontend |
+| Backend Framework | Next.js API Routes | 15+| Serverless functions | Seamless integration with frontend |
 | API Style | REST | - | Simple integration | Straightforward for LLM and database operations |
 | Database | MongoDB | 7+ | Document storage | Flexible schema for graph nodes and edges |
 | Cache | Vercel Edge Cache | Built-in | Performance optimization | Automatic caching for static assets |
@@ -106,8 +106,8 @@ graph TB
 | Frontend Testing | Jest + React Testing Library | Latest | Component testing | Comprehensive frontend testing |
 | Backend Testing | Jest + Supertest | Latest | API testing | Backend API and integration testing |
 | E2E Testing | Playwright | Latest | End-to-end testing | Cross-browser testing for graph interactions |
-| Build Tool | Next.js | 14+ | Built-in build system | Optimized for React applications |
-| Bundler | Turbopack | Built-in | Fast bundling | Next.js 14+ default bundler |
+| Build Tool | Next.js | 15+| Built-in build system | Optimized for React applications |
+| Bundler | Turbopack | Built-in | Fast bundling | Next.js 15+ default bundler |
 | IaC Tool | Vercel CLI | Latest | Infrastructure as code | Platform-specific deployment |
 | CI/CD | GitHub Actions | - | Automated deployment | Integrated with Vercel for seamless deployment |
 | Monitoring | Vercel Analytics | Built-in | Performance monitoring | Built-in analytics and monitoring |

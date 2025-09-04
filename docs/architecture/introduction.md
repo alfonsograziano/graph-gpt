@@ -7,7 +7,7 @@ This unified approach combines what would traditionally be separate backend and 
 ## Starter Template or Existing Project
 
 **Decision:** N/A - Greenfield project  
-**Approach:** Standard Next.js 14+ with TypeScript, MongoDB integration, and React Flow for graph visualization
+**Approach:** Standard Next.js 15+ with TypeScript, MongoDB integration, and React Flow for graph visualization
 
 ## Change Log
 

@@ -2,7 +2,7 @@
 
 ## Technical Summary
 
-Graph-GPT implements a modern fullstack architecture using Next.js 14+ with App Router for seamless frontend-backend integration. The system leverages MongoDB for flexible graph data storage, React Flow for interactive graph visualization, and OpenAI API integration for streaming LLM responses. The architecture follows a monorepo structure with shared TypeScript types, enabling rapid development of the graph-based conversation interface. Deployment utilizes Vercel's serverless platform for optimal performance and scalability, with real-time state synchronization ensuring consistent graph state across sessions.
+Graph-GPT implements a modern fullstack architecture using Next.js 15+ with App Router for seamless frontend-backend integration. The system leverages MongoDB for flexible graph data storage, React Flow for interactive graph visualization, and OpenAI API integration for streaming LLM responses. The architecture follows a monorepo structure with shared TypeScript types, enabling rapid development of the graph-based conversation interface. Deployment utilizes Vercel's serverless platform for optimal performance and scalability, with real-time state synchronization ensuring consistent graph state across sessions.
 
 ## Platform and Infrastructure Choice
 
