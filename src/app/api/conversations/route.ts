@@ -76,3 +76,28 @@ export async function POST(
     );
   }
 }
+
+export async function DELETE(): Promise<NextResponse<ApiResponse>> {
+  try {
+    const deletedCount = await conversationService.deleteAllConversations();
+
+    return NextResponse.json({
+      success: true,
+      data: { deletedCount },
+      message: `Successfully deleted ${deletedCount} conversations`,
+    });
+  } catch (error) {
+    console.error("Error deleting all conversations:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete all conversations",
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -7,6 +7,14 @@ export class ConversationRepository {
     await connectToDatabase();
   }
 
+  private convertToConversation(doc: unknown): Conversation {
+    const docObj = doc as Record<string, unknown>;
+    return {
+      ...docObj,
+      id: docObj.id as string,
+    } as Conversation;
+  }
+
   async create(
     conversationData: Omit<Conversation, "createdAt" | "updatedAt">
   ): Promise<Conversation> {
@@ -20,7 +28,13 @@ export class ConversationRepository {
       });
 
       const savedConversation = await conversation.save();
-      return savedConversation.toObject();
+      const conversationObj = savedConversation.toObject();
+
+      return {
+        ...conversationObj,
+        id: conversationObj._id?.toString() || conversationObj.id,
+        _id: undefined,
+      } as Conversation;
     } catch (error) {
       throw new Error(
         `Failed to create conversation: ${
@@ -35,7 +49,9 @@ export class ConversationRepository {
       await this.ensureConnection();
 
       const conversation = await ConversationModel.findOne({ id }).lean();
-      return conversation;
+      if (!conversation) return null;
+
+      return this.convertToConversation(conversation);
     } catch (error) {
       throw new Error(
         `Failed to find conversation by id: ${
@@ -53,7 +69,9 @@ export class ConversationRepository {
         .sort({ updatedAt: -1 })
         .lean();
 
-      return conversations;
+      return conversations.map((conversation) =>
+        this.convertToConversation(conversation)
+      );
     } catch (error) {
       throw new Error(
         `Failed to find all conversations: ${
@@ -79,7 +97,9 @@ export class ConversationRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedConversation;
+      if (!updatedConversation) return null;
+
+      return this.convertToConversation(updatedConversation);
     } catch (error) {
       throw new Error(
         `Failed to update conversation: ${
@@ -104,6 +124,21 @@ export class ConversationRepository {
     }
   }
 
+  async deleteAll(): Promise<number> {
+    try {
+      await this.ensureConnection();
+
+      const result = await ConversationModel.deleteMany({});
+      return result.deletedCount || 0;
+    } catch (error) {
+      throw new Error(
+        `Failed to delete all conversations: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
   async findByNodeId(nodeId: string): Promise<Conversation | null> {
     try {
       await this.ensureConnection();
@@ -111,7 +146,10 @@ export class ConversationRepository {
       const conversation = await ConversationModel.findOne({
         "nodes.id": nodeId,
       }).lean();
-      return conversation;
+
+      if (!conversation) return null;
+
+      return this.convertToConversation(conversation);
     } catch (error) {
       throw new Error(
         `Failed to find conversation by node id: ${
@@ -137,7 +175,9 @@ export class ConversationRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedConversation;
+      if (!updatedConversation) return null;
+
+      return this.convertToConversation(updatedConversation);
     } catch (error) {
       throw new Error(
         `Failed to add node to conversation: ${
@@ -163,7 +203,9 @@ export class ConversationRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedConversation;
+      if (!updatedConversation) return null;
+
+      return this.convertToConversation(updatedConversation);
     } catch (error) {
       throw new Error(
         `Failed to add edge to conversation: ${
@@ -192,7 +234,9 @@ export class ConversationRepository {
         { new: true, runValidators: true }
       ).lean();
 
-      return updatedConversation;
+      if (!updatedConversation) return null;
+
+      return this.convertToConversation(updatedConversation);
     } catch (error) {
       throw new Error(
         `Failed to update node in conversation: ${
@@ -235,7 +279,9 @@ export class ConversationRepository {
         );
       }
 
-      return updatedConversation?.toObject() || null;
+      if (!updatedConversation) return null;
+
+      return this.convertToConversation(updatedConversation.toObject());
     } catch (error) {
       throw new Error(
         `Failed to delete node from conversation: ${

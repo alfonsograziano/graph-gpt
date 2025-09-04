@@ -21,7 +21,7 @@ const PositionSchema = new Schema<Position>(
 // Node Schema
 const NodeSchema = new Schema<Node>(
   {
-    id: { type: String, required: true, unique: true },
+    id: { type: String, required: true },
     type: {
       type: String,
       enum: ["input", "loading", "completed"] as NodeType[],
@@ -40,7 +40,7 @@ const NodeSchema = new Schema<Node>(
 // Edge Schema
 const EdgeSchema = new Schema<Edge>(
   {
-    id: { type: String, required: true, unique: true },
+    id: { type: String, required: true },
     sourceNodeId: { type: String, required: true },
     targetNodeId: { type: String, required: true },
     type: {
@@ -110,12 +110,8 @@ ConversationSchema.pre("save", function (next) {
 ConversationSchema.index({ id: 1 }, { unique: true });
 ConversationSchema.index({ createdAt: -1 });
 ConversationSchema.index({ updatedAt: -1 });
-ConversationSchema.index({ "nodes.id": 1 });
-ConversationSchema.index({ "edges.sourceNodeId": 1 });
-ConversationSchema.index({ "edges.targetNodeId": 1 });
 
 // Create and export the model
-export const ConversationModel = mongoose.model<Conversation>(
-  "Conversation",
-  ConversationSchema
-);
+export const ConversationModel =
+  mongoose.models.Conversation ||
+  mongoose.model<Conversation>("Conversation", ConversationSchema);

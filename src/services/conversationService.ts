@@ -59,6 +59,10 @@ export class ConversationService {
     return await this.repository.delete(id);
   }
 
+  async deleteAllConversations(): Promise<number> {
+    return await this.repository.deleteAll();
+  }
+
   async addNode(
     conversationId: string,
     node: Omit<Node, "id" | "conversationId" | "createdAt" | "updatedAt">
