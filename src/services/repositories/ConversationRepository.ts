@@ -1,0 +1,247 @@
+import { ConversationModel } from "../../lib/models/Conversation";
+import { Conversation } from "../../types";
+import { connectToDatabase } from "../../lib/database";
+
+export class ConversationRepository {
+  private async ensureConnection(): Promise<void> {
+    await connectToDatabase();
+  }
+
+  async create(
+    conversationData: Omit<Conversation, "createdAt" | "updatedAt">
+  ): Promise<Conversation> {
+    try {
+      await this.ensureConnection();
+
+      const conversation = new ConversationModel({
+        ...conversationData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const savedConversation = await conversation.save();
+      return savedConversation.toObject();
+    } catch (error) {
+      throw new Error(
+        `Failed to create conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async findById(id: string): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      const conversation = await ConversationModel.findOne({ id }).lean();
+      return conversation;
+    } catch (error) {
+      throw new Error(
+        `Failed to find conversation by id: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async findAll(): Promise<Conversation[]> {
+    try {
+      await this.ensureConnection();
+
+      const conversations = await ConversationModel.find({})
+        .sort({ updatedAt: -1 })
+        .lean();
+
+      return conversations;
+    } catch (error) {
+      throw new Error(
+        `Failed to find all conversations: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async update(
+    id: string,
+    updateData: Partial<Omit<Conversation, "id" | "createdAt">>
+  ): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      const updatedConversation = await ConversationModel.findOneAndUpdate(
+        { id },
+        {
+          ...updateData,
+          updatedAt: new Date(),
+        },
+        { new: true, runValidators: true }
+      ).lean();
+
+      return updatedConversation;
+    } catch (error) {
+      throw new Error(
+        `Failed to update conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async delete(id: string): Promise<boolean> {
+    try {
+      await this.ensureConnection();
+
+      const result = await ConversationModel.findOneAndDelete({ id });
+      return result !== null;
+    } catch (error) {
+      throw new Error(
+        `Failed to delete conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async findByNodeId(nodeId: string): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      const conversation = await ConversationModel.findOne({
+        "nodes.id": nodeId,
+      }).lean();
+      return conversation;
+    } catch (error) {
+      throw new Error(
+        `Failed to find conversation by node id: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async addNode(
+    conversationId: string,
+    node: Conversation["nodes"][0]
+  ): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      const updatedConversation = await ConversationModel.findOneAndUpdate(
+        { id: conversationId },
+        {
+          $push: { nodes: node },
+          updatedAt: new Date(),
+        },
+        { new: true, runValidators: true }
+      ).lean();
+
+      return updatedConversation;
+    } catch (error) {
+      throw new Error(
+        `Failed to add node to conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async addEdge(
+    conversationId: string,
+    edge: Conversation["edges"][0]
+  ): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      const updatedConversation = await ConversationModel.findOneAndUpdate(
+        { id: conversationId },
+        {
+          $push: { edges: edge },
+          updatedAt: new Date(),
+        },
+        { new: true, runValidators: true }
+      ).lean();
+
+      return updatedConversation;
+    } catch (error) {
+      throw new Error(
+        `Failed to add edge to conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async updateNode(
+    conversationId: string,
+    nodeId: string,
+    nodeData: Partial<Conversation["nodes"][0]>
+  ): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      const updatedConversation = await ConversationModel.findOneAndUpdate(
+        { id: conversationId, "nodes.id": nodeId },
+        {
+          $set: {
+            "nodes.$": { ...nodeData, id: nodeId, updatedAt: new Date() },
+            updatedAt: new Date(),
+          },
+        },
+        { new: true, runValidators: true }
+      ).lean();
+
+      return updatedConversation;
+    } catch (error) {
+      throw new Error(
+        `Failed to update node in conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  async deleteNode(
+    conversationId: string,
+    nodeId: string
+  ): Promise<Conversation | null> {
+    try {
+      await this.ensureConnection();
+
+      // First remove the node
+      const updatedConversation = await ConversationModel.findOneAndUpdate(
+        { id: conversationId },
+        {
+          $pull: { nodes: { id: nodeId } },
+          updatedAt: new Date(),
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (updatedConversation) {
+        // Then remove all edges connected to this node
+        await ConversationModel.findOneAndUpdate(
+          { id: conversationId },
+          {
+            $pull: {
+              edges: {
+                $or: [{ sourceNodeId: nodeId }, { targetNodeId: nodeId }],
+              },
+            },
+            updatedAt: new Date(),
+          },
+          { new: true, runValidators: true }
+        );
+      }
+
+      return updatedConversation?.toObject() || null;
+    } catch (error) {
+      throw new Error(
+        `Failed to delete node from conversation: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+}
