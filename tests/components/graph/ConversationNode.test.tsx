@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import { ConversationNode } from "@/components/graph/ConversationNode";
 import { Node } from "@/types";
 
@@ -12,6 +13,25 @@ jest.mock("reactflow", () => ({
     Top: "top",
     Bottom: "bottom",
   },
+}));
+
+// Mock the NodeCompleted component
+jest.mock("@/components/graph/NodeCompleted", () => ({
+  NodeCompleted: ({
+    userMessage,
+    assistantResponse,
+    isActive,
+    onBranchCreate,
+  }: any) => (
+    <div data-testid="node-completed">
+      <div data-testid="user-message">{userMessage}</div>
+      <div data-testid="assistant-response">{assistantResponse}</div>
+      <div data-testid="is-active">{isActive.toString()}</div>
+      <button data-testid="branch-button" onClick={onBranchCreate}>
+        Create Branch
+      </button>
+    </div>
+  ),
 }));
 
 const mockNode: Node = {
@@ -50,6 +70,7 @@ const mockLoadingNode: Node = {
 describe("ConversationNode", () => {
   const mockOnNodeClick = jest.fn();
   const mockOnMessageSubmit = jest.fn();
+  const mockOnBranchCreate = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -72,19 +93,24 @@ describe("ConversationNode", () => {
     expect(screen.getByTestId("handle-source-bottom")).toBeInTheDocument();
   });
 
-  it("renders completed node with user message and assistant response", () => {
+  it("renders completed node with NodeCompleted component", () => {
     render(
       <ConversationNode
         node={mockCompletedNode}
         onNodeClick={mockOnNodeClick}
         onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
       />
     );
 
-    expect(screen.getByText("Hello, world!")).toBeInTheDocument();
-    expect(
-      screen.getByText("Hi there! How can I help you?")
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("node-completed")).toBeInTheDocument();
+    expect(screen.getByTestId("user-message")).toHaveTextContent(
+      "Hello, world!"
+    );
+    expect(screen.getByTestId("assistant-response")).toHaveTextContent(
+      "Hi there! How can I help you?"
+    );
+    expect(screen.getByTestId("branch-button")).toBeInTheDocument();
   });
 
   it("renders loading node with spinner", () => {
@@ -229,17 +255,20 @@ describe("ConversationNode", () => {
       ?.parentElement?.parentElement;
     expect(nodeElement).toHaveClass("bg-gray-200");
 
-    // Test completed node (white background)
+    // Test completed node (white background when active)
     rerender(
       <ConversationNode
         node={mockCompletedNode}
+        isActive={true}
         onNodeClick={mockOnNodeClick}
         onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
       />
     );
 
-    nodeElement = screen.getByText("Hello, world!").closest("div")
-      ?.parentElement?.parentElement;
+    nodeElement = screen
+      .getByTestId("node-completed")
+      .closest("div")?.parentElement;
     expect(nodeElement).toHaveClass("bg-white");
   });
 
@@ -308,11 +337,126 @@ describe("ConversationNode", () => {
         node={mockCompletedNode}
         onNodeClick={mockOnNodeClick}
         onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
       />
     );
 
-    contentElement = screen.getByText("Hello, world!").closest("div")
-      ?.parentElement?.parentElement;
-    expect(contentElement).toHaveClass("min-w-[300px]");
+    // Check that the completed node renders without errors
+    expect(screen.getByTestId("node-completed")).toBeInTheDocument();
+  });
+
+  it("calls onBranchCreate when branch button is clicked in completed node", () => {
+    render(
+      <ConversationNode
+        node={mockCompletedNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
+      />
+    );
+
+    const branchButton = screen.getByTestId("branch-button");
+    fireEvent.click(branchButton);
+
+    expect(mockOnBranchCreate).toHaveBeenCalledWith("test-node-2");
+  });
+
+  it("passes isActive prop to NodeCompleted component", () => {
+    render(
+      <ConversationNode
+        node={mockCompletedNode}
+        isActive={true}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
+      />
+    );
+
+    expect(screen.getByTestId("is-active")).toHaveTextContent("true");
+  });
+
+  it("passes isActive=false to NodeCompleted component when not active", () => {
+    render(
+      <ConversationNode
+        node={mockCompletedNode}
+        isActive={false}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
+      />
+    );
+
+    expect(screen.getByTestId("is-active")).toHaveTextContent("false");
+  });
+
+  it("applies correct background styling for completed nodes based on active state", () => {
+    // Test active completed node (white background)
+    const { rerender } = render(
+      <ConversationNode
+        node={mockCompletedNode}
+        isActive={true}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
+      />
+    );
+
+    let nodeElement = screen
+      .getByTestId("node-completed")
+      .closest("div")?.parentElement;
+    expect(nodeElement).toHaveClass("bg-white");
+
+    // Test inactive completed node (gray background)
+    rerender(
+      <ConversationNode
+        node={mockCompletedNode}
+        isActive={false}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
+      />
+    );
+
+    nodeElement = screen
+      .getByTestId("node-completed")
+      .closest("div")?.parentElement;
+    expect(nodeElement).toHaveClass("bg-gray-100");
+  });
+
+  it("handles completed node without onBranchCreate callback", () => {
+    render(
+      <ConversationNode
+        node={mockCompletedNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    expect(screen.getByTestId("node-completed")).toBeInTheDocument();
+    expect(screen.getByTestId("branch-button")).toBeInTheDocument();
+
+    // Should not throw error when clicking branch button without callback
+    const branchButton = screen.getByTestId("branch-button");
+    expect(() => fireEvent.click(branchButton)).not.toThrow();
+  });
+
+  it("passes correct props to NodeCompleted component", () => {
+    render(
+      <ConversationNode
+        node={mockCompletedNode}
+        isActive={true}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+        onBranchCreate={mockOnBranchCreate}
+      />
+    );
+
+    expect(screen.getByTestId("user-message")).toHaveTextContent(
+      mockCompletedNode.userMessage
+    );
+    expect(screen.getByTestId("assistant-response")).toHaveTextContent(
+      mockCompletedNode.assistantResponse
+    );
+    expect(screen.getByTestId("is-active")).toHaveTextContent("true");
   });
 });

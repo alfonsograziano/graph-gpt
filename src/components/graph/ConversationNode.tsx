@@ -5,12 +5,14 @@ import { Handle, Position } from "reactflow";
 import { Node } from "@/types";
 import { NodeInput } from "./NodeInput";
 import { NodeLoading } from "./NodeLoading";
+import { NodeCompleted } from "./NodeCompleted";
 
 interface ConversationNodeProps {
   node: Node;
   isActive?: boolean;
   onNodeClick?: (nodeId: string) => void;
   onMessageSubmit?: (message: string) => void;
+  onBranchCreate?: (nodeId: string) => void;
 }
 
 export const ConversationNode: React.FC<ConversationNodeProps> = ({
@@ -18,6 +20,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   isActive = false,
   onNodeClick,
   onMessageSubmit,
+  onBranchCreate,
 }) => {
   const handleNodeClick = () => {
     if (onNodeClick) {
@@ -28,6 +31,12 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   const handleMessageSubmit = (message: string) => {
     if (onMessageSubmit) {
       onMessageSubmit(message);
+    }
+  };
+
+  const handleBranchCreate = () => {
+    if (onBranchCreate) {
+      onBranchCreate(node.id);
     }
   };
 
@@ -46,16 +55,12 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         return <NodeLoading message={node.userMessage} />;
       case "completed":
         return (
-          <div className="p-4 min-w-[300px] bg-white transition-all duration-300 ease-in-out">
-            <div className="space-y-3">
-              <div className="text-sm font-medium text-gray-900 leading-relaxed">
-                {node.userMessage}
-              </div>
-              <div className="text-sm text-gray-600 leading-relaxed">
-                {node.assistantResponse}
-              </div>
-            </div>
-          </div>
+          <NodeCompleted
+            userMessage={node.userMessage}
+            assistantResponse={node.assistantResponse}
+            isActive={isActive}
+            onBranchCreate={handleBranchCreate}
+          />
         );
       default:
         return (
@@ -77,7 +82,9 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
       case "loading":
         return `${baseClasses} bg-gray-200 ${activeClasses}`;
       case "completed":
-        return `${baseClasses} bg-white ${activeClasses}`;
+        // Completed nodes have white background when active, light gray when inactive
+        const completedBg = isActive ? "bg-white" : "bg-gray-100";
+        return `${baseClasses} ${completedBg} ${activeClasses}`;
       default:
         return `${baseClasses} bg-gray-100 ${activeClasses}`;
     }
