@@ -1,33 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Conversation } from "@/types";
 import { GraphCanvas } from "@/components/graph/GraphCanvas";
 import { EditableTitle } from "@/components/ui/EditableTitle";
 import { Button } from "@/components/ui/Button";
 import { useConversation } from "@/hooks/useConversation";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
 
 interface ConversationPageProps {
-  conversation: Conversation;
+  conversationId: string;
 }
 
 export const ConversationPage: React.FC<ConversationPageProps> = ({
-  conversation: initialConversation,
+  conversationId,
 }) => {
   const router = useRouter();
+  const { conversation, isLoading, updateConversation } =
+    useConversation(conversationId);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [title, setTitle] = useState(initialConversation.title);
+  const [title, setTitle] = useState(conversation?.title || "");
   const [isSaving, setIsSaving] = useState(false);
-
-  const { updateConversation } = useConversation(initialConversation.id);
 
   const handleBackToHome = () => {
     router.push("/");
   };
 
   const handleTitleSave = async (newTitle: string) => {
-    if (newTitle.trim() === initialConversation.title) {
+    if (newTitle.trim() === conversation?.title) {
       setIsEditingTitle(false);
       return;
     }
@@ -40,16 +40,20 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     } catch (error) {
       console.error("Failed to update title:", error);
       // Revert title on error
-      setTitle(initialConversation.title);
+      setTitle(conversation?.title || "");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleTitleCancel = () => {
-    setTitle(initialConversation.title);
+    setTitle(conversation?.title || "");
     setIsEditingTitle(false);
   };
+
+  useEffect(() => {
+    setTitle(conversation?.title || "");
+  }, [conversation]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -86,7 +90,13 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
 
       {/* Canvas Area */}
       <div className="flex-1 relative">
-        <GraphCanvas conversation={initialConversation} />
+        {isLoading || !conversation ? (
+          <div className="flex justify-center items-center h-full">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <GraphCanvas conversation={conversation} />
+        )}
       </div>
     </div>
   );

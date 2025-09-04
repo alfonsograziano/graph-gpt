@@ -13,6 +13,7 @@
     "start:mongodb": "docker compose up -d mongodb"
   },
   "dependencies": {
+    "babel-plugin-react-compiler": "^19.1.0-rc.3",
     "mongoose": "^8.18.0",
     "next": "15.5.2",
     "openai": "^5.1.1",

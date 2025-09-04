@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id || id.trim().length === 0) {
       return NextResponse.json(

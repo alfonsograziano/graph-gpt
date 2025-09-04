@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Conversation } from "@/types";
-import { conversationService } from "@/services/conversationService";
+import { FrontendConversationService } from "@/services/frontendConversationService";
 
 interface UseConversationReturn {
   conversation: Conversation | null;
@@ -15,14 +15,14 @@ export const useConversation = (id: string): UseConversationReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchConversation = async () => {
+  const fetchConversation = useCallback(async () => {
     if (!id) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await conversationService.getConversation(id);
+      const data = await FrontendConversationService.getConversation(id);
       setConversation(data);
     } catch (err) {
       const errorMessage =
@@ -32,16 +32,17 @@ export const useConversation = (id: string): UseConversationReturn => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   const updateConversation = async (updates: Partial<Conversation>) => {
     if (!conversation) return;
 
     try {
-      const updatedConversation = await conversationService.updateConversation(
-        conversation.id,
-        updates
-      );
+      const updatedConversation =
+        await FrontendConversationService.updateConversation(
+          conversation.id,
+          updates
+        );
       setConversation(updatedConversation);
     } catch (err) {
       const errorMessage =
