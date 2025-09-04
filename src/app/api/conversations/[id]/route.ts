@@ -152,13 +152,10 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Conversation deleted successfully",
-      },
-      { status: 204 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: "Conversation deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting conversation:", error);
 

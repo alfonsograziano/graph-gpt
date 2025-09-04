@@ -13,6 +13,7 @@ export const HomePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -55,6 +56,34 @@ export const HomePage: React.FC = () => {
 
   const handleConversationClick = (conversationId: string) => {
     router.push(`/chat/${conversationId}`);
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this conversation? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingId(conversationId);
+      setError(null);
+
+      await FrontendConversationService.deleteConversation(conversationId);
+
+      // Remove the conversation from the local state
+      setConversations((prev) =>
+        prev.filter((conv) => conv.id !== conversationId)
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete conversation"
+      );
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const EmptyState = () => (
@@ -169,6 +198,8 @@ export const HomePage: React.FC = () => {
                 key={conversation.id || `conversation-${index}`}
                 conversation={conversation}
                 onClick={handleConversationClick}
+                onDelete={handleDeleteConversation}
+                isDeleting={deletingId === conversation.id}
               />
             ))}
           </div>
