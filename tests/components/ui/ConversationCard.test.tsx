@@ -15,6 +15,7 @@ const mockConversation: Conversation = {
 
 describe("ConversationCard", () => {
   const mockOnClick = jest.fn();
+  const mockOnDelete = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();

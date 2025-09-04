@@ -201,8 +201,9 @@ describe("ConversationNode", () => {
     expect(nodeElement).toHaveClass("ring-2", "ring-blue-500");
   });
 
-  it("applies light gray background styling", () => {
-    render(
+  it("applies correct background styling based on node type", () => {
+    // Test input node (white background)
+    const { rerender } = render(
       <ConversationNode
         node={mockNode}
         onNodeClick={mockOnNodeClick}
@@ -210,10 +211,36 @@ describe("ConversationNode", () => {
       />
     );
 
-    const nodeElement = screen
+    let nodeElement = screen
       .getByRole("button", { name: "Send" })
       .closest("div")?.parentElement;
+    expect(nodeElement).toHaveClass("bg-white");
+
+    // Test loading node (gray background)
+    rerender(
+      <ConversationNode
+        node={mockLoadingNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    nodeElement = screen.getByText("Generating...").closest("div")
+      ?.parentElement?.parentElement;
     expect(nodeElement).toHaveClass("bg-gray-200");
+
+    // Test completed node (white background)
+    rerender(
+      <ConversationNode
+        node={mockCompletedNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    nodeElement = screen.getByText("Hello, world!").closest("div")
+      ?.parentElement?.parentElement;
+    expect(nodeElement).toHaveClass("bg-white");
   });
 
   it("renders unknown node type gracefully", () => {
@@ -228,5 +255,64 @@ describe("ConversationNode", () => {
     );
 
     expect(screen.getByText("Unknown node type")).toBeInTheDocument();
+  });
+
+  it("applies smooth transition classes", () => {
+    render(
+      <ConversationNode
+        node={mockNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    const nodeElement = screen
+      .getByRole("button", { name: "Send" })
+      .closest("div")?.parentElement;
+    expect(nodeElement).toHaveClass(
+      "transition-all",
+      "duration-300",
+      "ease-in-out"
+    );
+  });
+
+  it("maintains consistent dimensions during state transitions", () => {
+    const { rerender } = render(
+      <ConversationNode
+        node={mockNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    // All states should have min-w-[300px]
+    let contentElement = screen
+      .getByPlaceholderText("What do you have in mind?")
+      .closest("div");
+    expect(contentElement).toHaveClass("min-w-[300px]");
+
+    rerender(
+      <ConversationNode
+        node={mockLoadingNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    contentElement = screen.getByText("Generating...").closest("div")
+      ?.parentElement?.parentElement;
+    expect(contentElement).toHaveClass("min-w-[300px]");
+
+    rerender(
+      <ConversationNode
+        node={mockCompletedNode}
+        onNodeClick={mockOnNodeClick}
+        onMessageSubmit={mockOnMessageSubmit}
+      />
+    );
+
+    contentElement = screen.getByText("Hello, world!").closest("div")
+      ?.parentElement?.parentElement;
+    expect(contentElement).toHaveClass("min-w-[300px]");
   });
 });

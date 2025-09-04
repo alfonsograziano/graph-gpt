@@ -4,6 +4,7 @@ import React from "react";
 import { Handle, Position } from "reactflow";
 import { Node } from "@/types";
 import { NodeInput } from "./NodeInput";
+import { NodeLoading } from "./NodeLoading";
 
 interface ConversationNodeProps {
   node: Node;
@@ -34,7 +35,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     switch (node.type) {
       case "input":
         return (
-          <div className="p-4 min-w-[300px]">
+          <div className="p-4 min-w-[300px] transition-all duration-300 ease-in-out">
             <NodeInput
               onSubmit={handleMessageSubmit}
               placeholder="What do you have in mind?"
@@ -42,27 +43,15 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           </div>
         );
       case "loading":
-        return (
-          <div className="p-4 min-w-[300px]">
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-900">
-                {node.userMessage}
-              </div>
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm text-gray-600">Generating...</span>
-              </div>
-            </div>
-          </div>
-        );
+        return <NodeLoading message={node.userMessage} />;
       case "completed":
         return (
-          <div className="p-4 min-w-[300px]">
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-900">
+          <div className="p-4 min-w-[300px] bg-white transition-all duration-300 ease-in-out">
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-gray-900 leading-relaxed">
                 {node.userMessage}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 leading-relaxed">
                 {node.assistantResponse}
               </div>
             </div>
@@ -77,13 +66,25 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     }
   };
 
+  const getNodeStyling = () => {
+    const baseClasses =
+      "border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out cursor-pointer";
+    const activeClasses = isActive ? "ring-2 ring-blue-500" : "";
+
+    switch (node.type) {
+      case "input":
+        return `${baseClasses} bg-white ${activeClasses}`;
+      case "loading":
+        return `${baseClasses} bg-gray-200 ${activeClasses}`;
+      case "completed":
+        return `${baseClasses} bg-white ${activeClasses}`;
+      default:
+        return `${baseClasses} bg-gray-100 ${activeClasses}`;
+    }
+  };
+
   return (
-    <div
-      className={`bg-gray-200 border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
-        isActive ? "ring-2 ring-blue-500" : ""
-      }`}
-      onClick={handleNodeClick}
-    >
+    <div className={getNodeStyling()} onClick={handleNodeClick}>
       <Handle
         type="target"
         position={Position.Top}
