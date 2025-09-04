@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useEffect } from "react";
 import ReactFlow, {
-  Node,
+  Node as ReactFlowNodeType,
   Edge,
   Controls,
   Background,
@@ -16,18 +16,17 @@ import ReactFlow, {
   PanOnScrollMode,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Conversation, ReactFlowNode, ReactFlowEdge } from "@/types";
+import { Conversation, ReactFlowEdge, Node } from "@/types";
+import { ConversationNode } from "./ConversationNode";
 
 interface GraphCanvasProps {
   conversation: Conversation;
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
+  onMessageSubmit?: (message: string) => void;
 }
 
-// Basic node types for now
-const nodeTypes: NodeTypes = {
-  // Will be expanded in future stories
-};
+// Custom node types - will be defined inline with wrapper
 
 const edgeTypes: EdgeTypes = {
   // Will be expanded in future stories
@@ -37,22 +36,44 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   conversation,
   onNodeClick,
   onEdgeClick,
+  onMessageSubmit,
 }) => {
   // Transform conversation data to React Flow format
-  const initialNodes: ReactFlowNode[] = useMemo(() => {
+  const initialNodes: ReactFlowNodeType[] = useMemo(() => {
+    // If conversation has no nodes, create a default input node
+    if (conversation.nodes.length === 0) {
+      const defaultNode: Node = {
+        id: "default-input-node",
+        conversationId: conversation.id,
+        type: "input",
+        userMessage: "",
+        assistantResponse: "",
+        position: { x: 400, y: 300 },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      return [
+        {
+          id: defaultNode.id,
+          type: "conversationNode",
+          position: defaultNode.position,
+          data: {
+            node: defaultNode,
+          },
+        },
+      ];
+    }
+
     return conversation.nodes.map((node) => ({
       id: node.id,
-      type: "default",
+      type: "conversationNode",
       position: node.position,
       data: {
-        label: node.userMessage || "Node",
-        userMessage: node.userMessage,
-        assistantResponse: node.assistantResponse,
-        type: node.type,
-        createdAt: node.createdAt,
+        node: node,
       },
     }));
-  }, [conversation.nodes]);
+  }, [conversation.nodes, conversation.id]);
 
   const initialEdges: ReactFlowEdge[] = useMemo(() => {
     return conversation.edges.map((edge) => ({
@@ -87,7 +108,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   }, [nodes.length]);
 
   const onNodeClickHandler = useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: ReactFlowNodeType) => {
       onNodeClick?.(node.id);
     },
     [onNodeClick]
@@ -100,6 +121,28 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     [onEdgeClick]
   );
 
+  // Custom node component wrapper to pass props
+  const CustomNodeWrapper = useCallback(
+    ({ data }: { data: { node: Node } }) => {
+      return (
+        <ConversationNode
+          node={data.node}
+          onNodeClick={onNodeClick}
+          onMessageSubmit={onMessageSubmit}
+        />
+      );
+    },
+    [onNodeClick, onMessageSubmit]
+  );
+
+  // Update node types with wrapper
+  const customNodeTypes: NodeTypes = useMemo(
+    () => ({
+      conversationNode: CustomNodeWrapper,
+    }),
+    [CustomNodeWrapper]
+  );
+
   return (
     <div className="w-full h-full min-h-screen bg-gray-50">
       <ReactFlow
@@ -109,7 +152,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClickHandler}
         onEdgeClick={onEdgeClickHandler}
-        nodeTypes={nodeTypes}
+        nodeTypes={customNodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
         fitView

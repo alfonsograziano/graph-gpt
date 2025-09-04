@@ -7,6 +7,7 @@ import { EditableTitle } from "@/components/ui/EditableTitle";
 import { Button } from "@/components/ui/Button";
 import { useConversation } from "@/hooks/useConversation";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { Node } from "@/types";
 
 interface ConversationPageProps {
   conversationId: string;
@@ -21,6 +22,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(conversation?.title || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isSubmittingMessage, setIsSubmittingMessage] = useState(false);
 
   const handleBackToHome = () => {
     router.push("/");
@@ -49,6 +51,44 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   const handleTitleCancel = () => {
     setTitle(conversation?.title || "");
     setIsEditingTitle(false);
+  };
+
+  const handleMessageSubmit = async (message: string) => {
+    if (!conversation || isSubmittingMessage) return;
+
+    setIsSubmittingMessage(true);
+
+    try {
+      // Create a new input node with the user message
+      const newNode: Node = {
+        id: `node-${Date.now()}`,
+        conversationId: conversation.id,
+        type: "input",
+        userMessage: message,
+        assistantResponse: "",
+        position: { x: 400, y: 300 },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Update the conversation with the new node
+      const updatedNodes = [...conversation.nodes, newNode];
+      await updateConversation({
+        nodes: updatedNodes,
+        metadata: {
+          ...conversation.metadata,
+          nodeCount: updatedNodes.length,
+          lastActiveNodeId: newNode.id,
+        },
+      });
+
+      // TODO: In future stories, this will trigger LLM processing
+      // For now, we'll just show the input node
+    } catch (error) {
+      console.error("Failed to submit message:", error);
+    } finally {
+      setIsSubmittingMessage(false);
+    }
   };
 
   useEffect(() => {
@@ -95,7 +135,10 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
             <LoadingSpinner />
           </div>
         ) : (
-          <GraphCanvas conversation={conversation} />
+          <GraphCanvas
+            conversation={conversation}
+            onMessageSubmit={handleMessageSubmit}
+          />
         )}
       </div>
     </div>
