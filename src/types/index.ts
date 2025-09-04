@@ -1,0 +1,93 @@
+// Position interface for node positioning
+export interface Position {
+  x: number;
+  y: number;
+}
+
+// Node types
+export type NodeType = "input" | "loading" | "completed";
+
+// Edge types
+export type EdgeType = "auto" | "manual" | "markdown";
+
+// Node interface
+export interface Node {
+  id: string;
+  conversationId: string;
+  type: NodeType;
+  userMessage: string;
+  assistantResponse: string;
+  position: Position;
+  createdAt: Date;
+  updatedAt: Date;
+  parentNodeId?: string;
+}
+
+// Edge metadata interface
+export interface EdgeMetadata {
+  markdownElementId?: string;
+  contextSnippet?: string;
+}
+
+// Edge interface
+export interface Edge {
+  id: string;
+  conversationId: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  type: EdgeType;
+  createdAt: Date;
+  metadata?: EdgeMetadata;
+}
+
+// Conversation metadata interface
+export interface ConversationMetadata {
+  nodeCount: number;
+  lastActiveNodeId?: string;
+  tags?: string[];
+}
+
+// Conversation interface
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  nodes: Node[];
+  edges: Edge[];
+  metadata: ConversationMetadata;
+}
+
+// API Response types
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// Database document types (for MongoDB)
+export interface ConversationDocument extends Omit<Conversation, "id"> {
+  _id?: string;
+}
+
+export interface NodeDocument extends Omit<Node, "id"> {
+  _id?: string;
+}
+
+export interface EdgeDocument extends Omit<Edge, "id"> {
+  _id?: string;
+}
+
+// Error types
+export interface DatabaseError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  value?: unknown;
+}
