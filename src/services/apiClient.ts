@@ -1,4 +1,4 @@
-import { ApiResponse } from "../types";
+import { ApiResponse, ChatRequest, ChatResponse } from "../types";
 
 class ApiClient {
   private baseUrl = "/api";
@@ -24,6 +24,46 @@ class ApiClient {
     }
 
     return data.data as T;
+  }
+
+  /**
+   * Send a chat request to the API
+   */
+  async sendChatRequest(request: ChatRequest): Promise<ChatResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Chat API Error: ${response.status}`
+        );
+      }
+
+      const data: ChatResponse = await response.json();
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to send chat request");
+    }
+  }
+
+  /**
+   * Handle API errors with proper error messages
+   */
+  handleApiError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return "An unexpected error occurred";
   }
 }
 

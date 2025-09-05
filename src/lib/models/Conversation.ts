@@ -106,7 +106,13 @@ ConversationSchema.pre("save", function (next) {
   next();
 });
 
+// Clear any existing model to ensure we use the latest schema
+if (mongoose.models.Conversation) {
+  delete mongoose.models.Conversation;
+}
+
 // Create and export the model
-export const ConversationModel =
-  mongoose.models.Conversation ||
-  mongoose.model<Conversation>("Conversation", ConversationSchema);
+export const ConversationModel = mongoose.model<Conversation>(
+  "Conversation",
+  ConversationSchema
+);

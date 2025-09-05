@@ -7,7 +7,9 @@ import { EditableTitle } from "@/components/ui/EditableTitle";
 import { Button } from "@/components/ui/Button";
 import { useConversation } from "@/hooks/useConversation";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Node } from "@/types";
+import { Node, ChatRequest } from "@/types";
+import { apiClient } from "@/services/apiClient";
+import { contextService } from "@/services/contextService";
 
 interface ConversationPageProps {
   conversationId: string;
@@ -80,10 +82,68 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
         },
       });
 
-      // TODO: In future stories, this will trigger LLM processing
-      // For now, we'll just show the loading node
+      // Get conversation context for the API call
+      const context = contextService.getConversationContext(
+        conversation,
+        nodeId
+      );
+
+      // Create chat request
+      const chatRequest: ChatRequest = {
+        message,
+        context,
+        nodeId,
+        conversationId: conversation.id,
+      };
+
+      // Send request to chat API
+      const response = await apiClient.sendChatRequest(chatRequest);
+
+      // Update the node with the assistant response
+      const finalUpdatedNodes = conversation.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            type: "completed" as const,
+            userMessage: message,
+            assistantResponse: response.content,
+            updatedAt: new Date(),
+          };
+        }
+        return node;
+      });
+
+      await updateConversation({
+        nodes: finalUpdatedNodes,
+        metadata: {
+          ...conversation.metadata,
+          lastActiveNodeId: nodeId,
+        },
+      });
     } catch (error) {
       console.error("Failed to submit message:", error);
+
+      // Update node to show error state
+      const errorNodes = conversation.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            type: "input" as const, // Revert to input state on error
+            userMessage: message,
+            assistantResponse: `Error: ${apiClient.handleApiError(error)}`,
+            updatedAt: new Date(),
+          };
+        }
+        return node;
+      });
+
+      await updateConversation({
+        nodes: errorNodes,
+        metadata: {
+          ...conversation.metadata,
+          lastActiveNodeId: nodeId,
+        },
+      });
     } finally {
       setIsSubmittingMessage(false);
     }
