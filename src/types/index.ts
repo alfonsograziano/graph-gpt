@@ -159,5 +159,37 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
+// Streaming types
+export interface StreamingResponse {
+  type: "chunk" | "complete" | "error";
+  content: string;
+  nodeId: string;
+  conversationId: string;
+  timestamp: Date;
+  isComplete: boolean;
+  metadata?: {
+    chunkIndex: number;
+    totalChunks?: number;
+    tokensUsed?: number;
+  };
+}
+
+export interface StreamingConfig {
+  chunkSize: number;
+  flushInterval: number;
+  maxRetries: number;
+  timeout: number;
+  enableCompression: boolean;
+}
+
+export interface StreamingState {
+  isStreaming: boolean;
+  streamingContent: string;
+  connectionStatus: "connected" | "disconnected" | "error";
+  nodeId: string;
+  error?: string;
+  isComplete?: boolean;
+}
+
 // Re-export markdown types
 export * from "./markdown";

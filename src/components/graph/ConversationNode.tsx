@@ -16,6 +16,7 @@ interface ConversationNodeProps {
   onBranchCreate?: (nodeId: string) => void;
   onNodeDelete?: (nodeId: string) => void;
   isStreaming?: boolean;
+  streamingContent?: string;
 }
 
 export const ConversationNode: React.FC<ConversationNodeProps> = ({
@@ -26,6 +27,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   onBranchCreate,
   onNodeDelete,
   isStreaming = false,
+  streamingContent = "",
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const handleNodeClick = () => {
@@ -64,7 +66,13 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           </div>
         );
       case "loading":
-        return <NodeLoading message={node.userMessage || ""} />;
+        return (
+          <NodeLoading
+            message={node.userMessage || ""}
+            isStreaming={isStreaming}
+            streamingContent={streamingContent}
+          />
+        );
       case "completed":
         return (
           <NodeCompleted
