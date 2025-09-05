@@ -18,6 +18,11 @@ class ChatService {
     try {
       // Prepare messages for OpenAI API
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+        {
+          role: "system",
+          content:
+            "You are a helpful assistant. Always use markdown to format your responses.",
+        },
         ...request.context.map((msg: ChatMessage) => ({
           role: msg.role,
           content: msg.content,
@@ -32,8 +37,8 @@ class ChatService {
       const completion = await this.openai.chat.completions.create({
         model: this.config.model,
         messages,
-        max_tokens: this.config.maxTokens,
-        temperature: this.config.temperature,
+        //max_tokens: this.config.maxTokens,
+        //temperature: this.config.temperature,
       });
 
       const response = completion.choices[0]?.message?.content;

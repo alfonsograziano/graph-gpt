@@ -36,7 +36,10 @@ export const NodeInput: React.FC<NodeInputProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+    <form
+      onSubmit={handleSubmit}
+      className="flex items-center space-x-2 max-w-[600px]"
+    >
       <input
         type="text"
         value={inputValue}

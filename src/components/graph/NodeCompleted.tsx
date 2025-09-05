@@ -20,7 +20,7 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
   isStreaming = false,
 }) => {
   return (
-    <div className="p-4 min-w-[300px] transition-all duration-300 ease-in-out">
+    <div className="p-4 min-w-[300px] max-w-[600px] transition-all duration-300 ease-in-out">
       <div className="space-y-3">
         {/* User Message */}
         <div className="text-sm font-medium text-gray-900 leading-relaxed">
@@ -32,7 +32,7 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
 
         {/* Assistant Response with Markdown */}
         <div className="text-sm text-gray-700 leading-relaxed">
-          <MarkdownRenderer 
+          <MarkdownRenderer
             content={assistantResponse}
             isStreaming={isStreaming}
           />

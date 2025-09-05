@@ -18,7 +18,7 @@ class ConfigService {
 
   private loadOpenAIConfig(): OpenAIConfig {
     const apiKey = process.env.OPENAI_API_KEY;
-    const model = process.env.OPENAI_MODEL || "gpt-4";
+    const model = process.env.OPENAI_MODEL || "gpt-5-nano";
     const maxTokens = parseInt(process.env.OPENAI_MAX_TOKENS || "4000", 10);
     const temperature = parseFloat(process.env.OPENAI_TEMPERATURE || "0.7");
     const baseUrl = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
