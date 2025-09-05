@@ -73,6 +73,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
             isActive={isActive}
             onBranchCreate={handleBranchCreate}
             isStreaming={isStreaming}
+            isHovered={isHovered}
           />
         );
       default:
@@ -120,11 +121,14 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         className="w-3 h-3 bg-gray-400"
       />
       {renderNodeContent()}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="w-3 h-3 bg-gray-400"
-      />
+      {node.type === "completed" && (
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          className="w-3 h-3 bg-gray-400"
+        />
+      )}
+
       <DeleteButton
         onDelete={handleNodeDelete}
         isVisible={isHovered}

@@ -5,11 +5,13 @@ import React from "react";
 interface BranchButtonProps {
   onClick: () => void;
   disabled?: boolean;
+  isVisible?: boolean;
 }
 
 export const BranchButton: React.FC<BranchButtonProps> = ({
   onClick,
   disabled = false,
+  isVisible = true,
 }) => {
   return (
     <button
@@ -23,6 +25,7 @@ export const BranchButton: React.FC<BranchButtonProps> = ({
         active:bg-blue-100 active:border-blue-600
         transition-all duration-200 ease-in-out
         shadow-sm hover:shadow-md
+        ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-75"}
         ${
           disabled
             ? "opacity-50 cursor-not-allowed hover:border-gray-300 hover:bg-white hover:shadow-sm"
@@ -31,6 +34,9 @@ export const BranchButton: React.FC<BranchButtonProps> = ({
       `}
       aria-label="Create new branch"
       title="Create new branch"
+      style={{
+        pointerEvents: isVisible ? "auto" : "none",
+      }}
     >
       <svg
         className="w-4 h-4 text-gray-600"

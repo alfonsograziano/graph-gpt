@@ -10,6 +10,7 @@ interface NodeCompletedProps {
   isActive: boolean;
   onBranchCreate: () => void;
   isStreaming?: boolean;
+  isHovered?: boolean;
 }
 
 export const NodeCompleted: React.FC<NodeCompletedProps> = ({
@@ -18,6 +19,7 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
   isActive,
   onBranchCreate,
   isStreaming = false,
+  isHovered = false,
 }) => {
   return (
     <div className="p-4 min-w-[300px] max-w-[600px] transition-all duration-300 ease-in-out">
@@ -39,9 +41,12 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
         </div>
       </div>
 
+      {/* Separator to make a bit of spacing for the branch button */}
+      <div className="mt-4"></div>
+
       {/* Branch Creation Button */}
-      <div className="flex justify-center mt-4">
-        <BranchButton onClick={onBranchCreate} />
+      <div className="absolute bottom-[-14px] left-1/2 transform -translate-x-1/2 z-[100]">
+        <BranchButton onClick={onBranchCreate} isVisible={isHovered} />
       </div>
     </div>
   );
