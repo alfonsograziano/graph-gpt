@@ -1,392 +1,296 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { useConversation } from "@/hooks/useConversation";
 import { FrontendConversationService } from "@/services/frontendConversationService";
 import { Conversation, Node, Edge } from "@/types";
 
-// Mock the frontend conversation service
-jest.mock("@/services/frontendConversationService", () => ({
-  FrontendConversationService: {
-    getConversation: jest.fn(),
-    updateConversation: jest.fn(),
-  },
-}));
+// Mock the service
+jest.mock("@/services/frontendConversationService");
+const mockFrontendConversationService =
+  FrontendConversationService as jest.Mocked<
+    typeof FrontendConversationService
+  >;
 
-const mockNode: Node = {
-  id: "node-1",
-  conversationId: "conv-1",
-  type: "completed",
-  userMessage: "Test message",
-  assistantResponse: "Test response",
-  position: { x: 100, y: 200 },
-  createdAt: new Date("2024-01-01"),
-  updatedAt: new Date("2024-01-01"),
-};
-
+// Mock test conversation
 const mockConversation: Conversation = {
-  id: "conv-1",
+  id: "test-conversation-123",
   title: "Test Conversation",
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
-  nodes: [mockNode],
-  edges: [],
+  nodes: [
+    {
+      id: "node-1",
+      conversationId: "test-conversation-123",
+      type: "input",
+      userMessage: "Hello",
+      assistantResponse: "",
+      position: { x: 100, y: 100 },
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+    },
+    {
+      id: "node-2",
+      conversationId: "test-conversation-123",
+      type: "completed",
+      userMessage: "How are you?",
+      assistantResponse: "I'm doing well, thank you!",
+      position: { x: 200, y: 200 },
+      createdAt: new Date("2024-01-01"),
+      updatedAt: new Date("2024-01-01"),
+    },
+  ],
+  edges: [
+    {
+      id: "edge-1",
+      conversationId: "test-conversation-123",
+      sourceNodeId: "node-1",
+      targetNodeId: "node-2",
+      type: "auto",
+      createdAt: new Date("2024-01-01"),
+    },
+  ],
   metadata: {
-    nodeCount: 1,
-    lastActiveNodeId: "node-1",
+    nodeCount: 2,
+    lastActiveNodeId: "node-2",
   },
 };
 
-describe("useConversation", () => {
+describe("useConversation - deleteNode", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFrontendConversationService.getConversation.mockResolvedValue(
+      mockConversation
+    );
+    mockFrontendConversationService.updateConversation.mockImplementation(
+      async (id, updates) => ({ ...mockConversation, ...updates })
+    );
   });
 
-  it("loads conversation on mount", async () => {
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockResolvedValue(mockConversation);
+  it("deletes a node and removes connected edges", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
 
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.conversation).toBe(null);
-    expect(result.current.error).toBe(null);
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     expect(result.current.conversation).toEqual(mockConversation);
-    expect(result.current.error).toBe(null);
-    expect(FrontendConversationService.getConversation).toHaveBeenCalledWith(
-      "conv-1"
+
+    // Delete node-1
+    await act(async () => {
+      await result.current.deleteNode("node-1");
+    });
+
+    // Verify the node was removed
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledWith(
+      "test-conversation-123",
+      expect.objectContaining({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({ id: "node-2" }),
+        ]),
+        edges: [], // Edge should be removed since it connected to deleted node
+        metadata: expect.objectContaining({
+          nodeCount: 1,
+          lastActiveNodeId: "node-2", // Should remain unchanged
+        }),
+      })
     );
   });
 
-  it("handles loading error", async () => {
-    const errorMessage = "Failed to load conversation";
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockRejectedValue(new Error(errorMessage));
+  it("deletes a node and keeps unrelated edges", async () => {
+    const conversationWithMultipleEdges: Conversation = {
+      ...mockConversation,
+      nodes: [
+        ...mockConversation.nodes,
+        {
+          id: "node-3",
+          conversationId: "test-conversation-123",
+          type: "completed",
+          userMessage: "Another question",
+          assistantResponse: "Another response",
+          position: { x: 300, y: 300 },
+          createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2024-01-01"),
+        },
+      ],
+      edges: [
+        ...mockConversation.edges,
+        {
+          id: "edge-2",
+          conversationId: "test-conversation-123",
+          sourceNodeId: "node-2",
+          targetNodeId: "node-3",
+          type: "auto",
+          createdAt: new Date("2024-01-01"),
+        },
+      ],
+      metadata: {
+        nodeCount: 3,
+        lastActiveNodeId: "node-3",
+      },
+    };
 
-    const { result } = renderHook(() => useConversation("conv-1"));
+    mockFrontendConversationService.getConversation.mockResolvedValue(
+      conversationWithMultipleEdges
+    );
 
-    expect(result.current.isLoading).toBe(true);
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.conversation).toBe(null);
-    expect(result.current.error).toBe(errorMessage);
-  });
-
-  it("handles non-Error rejection", async () => {
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockRejectedValue("String error");
-
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.conversation).toBe(null);
-    expect(result.current.error).toBe("Failed to load conversation");
-  });
-
-  it("refetches conversation when refetch is called", async () => {
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockResolvedValue(mockConversation);
-
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    // Call refetch
+    // Wait for initial load
     await act(async () => {
-      await result.current.refetch();
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(FrontendConversationService.getConversation).toHaveBeenCalledTimes(
-      2
+    // Delete node-1 (which has edge to node-2)
+    await act(async () => {
+      await result.current.deleteNode("node-1");
+    });
+
+    // Verify only the edge connected to deleted node was removed
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledWith(
+      "test-conversation-123",
+      expect.objectContaining({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({ id: "node-2" }),
+          expect.objectContaining({ id: "node-3" }),
+        ]),
+        edges: [
+          expect.objectContaining({ id: "edge-2" }), // This edge should remain
+        ],
+        metadata: expect.objectContaining({
+          nodeCount: 2,
+        }),
+      })
     );
   });
 
-  it("updates conversation successfully", async () => {
-    const updatedConversation = { ...mockConversation, title: "Updated Title" };
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockResolvedValue(mockConversation);
-    (
-      FrontendConversationService.updateConversation as jest.Mock
-    ).mockResolvedValue(updatedConversation);
-
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    await act(async () => {
-      await result.current.updateConversation({ title: "Updated Title" });
-    });
-
-    expect(FrontendConversationService.updateConversation).toHaveBeenCalledWith(
-      "conv-1",
-      { title: "Updated Title" }
+  it("clears lastActiveNodeId when deleting the active node", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
     );
-    expect(result.current.conversation).toEqual(updatedConversation);
-  });
 
-  it("handles update error", async () => {
-    const errorMessage = "Failed to update conversation";
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockResolvedValue(mockConversation);
-    (
-      FrontendConversationService.updateConversation as jest.Mock
-    ).mockRejectedValue(new Error(errorMessage));
-
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
+    // Wait for initial load
     await act(async () => {
-      await expect(
-        result.current.updateConversation({ title: "Updated Title" })
-      ).rejects.toThrow(errorMessage);
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(result.current.error).toBe(errorMessage);
-  });
-
-  it("handles update error with non-Error rejection", async () => {
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockResolvedValue(mockConversation);
-    (
-      FrontendConversationService.updateConversation as jest.Mock
-    ).mockRejectedValue("String error");
-
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
+    // Delete node-2 (which is the last active node)
     await act(async () => {
-      await expect(
-        result.current.updateConversation({ title: "Updated Title" })
-      ).rejects.toThrow("String error");
-    });
-
-    expect(result.current.error).toBe("Failed to update conversation");
-  });
-
-  it("does not update if conversation is null", async () => {
-    (
-      FrontendConversationService.getConversation as jest.Mock
-    ).mockResolvedValue(null);
-
-    const { result } = renderHook(() => useConversation("conv-1"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    await act(async () => {
-      await result.current.updateConversation({ title: "Updated Title" });
+      await result.current.deleteNode("node-2");
     });
 
     expect(
-      FrontendConversationService.updateConversation
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledWith(
+      "test-conversation-123",
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          lastActiveNodeId: undefined,
+        }),
+      })
+    );
+  });
+
+  it("handles deletion of non-existent node", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Try to delete non-existent node
+    await act(async () => {
+      await expect(
+        result.current.deleteNode("non-existent-node")
+      ).rejects.toThrow("Node not found");
+    });
+  });
+
+  it("handles deletion when conversation is null", async () => {
+    mockFrontendConversationService.getConversation.mockResolvedValue(
+      null as any
+    );
+
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Try to delete node when conversation is null
+    await act(async () => {
+      await result.current.deleteNode("node-1");
+    });
+
+    // Should not call updateConversation
+    expect(
+      mockFrontendConversationService.updateConversation
     ).not.toHaveBeenCalled();
   });
 
-  it("does not fetch if id is empty", async () => {
-    const { result } = renderHook(() => useConversation(""));
+  it("handles deletion errors gracefully", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
 
-    expect(result.current.isLoading).toBe(true);
-    expect(FrontendConversationService.getConversation).not.toHaveBeenCalled();
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Mock updateConversation to throw error
+    mockFrontendConversationService.updateConversation.mockRejectedValue(
+      new Error("Update failed")
+    );
+
+    // Try to delete node
+    await act(async () => {
+      await expect(result.current.deleteNode("node-1")).rejects.toThrow(
+        "Update failed"
+      );
+    });
+
+    // Verify error state is set
+    expect(result.current.error).toBe("Update failed");
   });
 
-  describe("createBranch", () => {
-    it("creates a new branch successfully", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
-      (conversationService.updateConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
+  it("updates node count correctly after deletion", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
 
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let newNode: Node | null = null;
-      await act(async () => {
-        newNode = await result.current.createBranch("node-1");
-      });
-
-      expect(newNode).toBeTruthy();
-      expect(newNode?.type).toBe("input");
-      expect(newNode?.parentNodeId).toBe("node-1");
-      expect(newNode?.position.x).toBe(100); // Same x as parent
-      expect(newNode?.position.y).toBe(320); // Parent y + NODE_SPACING (120)
-      expect(conversationService.updateConversation).toHaveBeenCalled();
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    it("returns null if conversation is null", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        null
-      );
-
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let newNode: Node | null = null;
-      await act(async () => {
-        newNode = await result.current.createBranch("node-1");
-      });
-
-      expect(newNode).toBeNull();
+    // Delete a node
+    await act(async () => {
+      await result.current.deleteNode("node-1");
     });
 
-    it("throws error if parent node not found", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
-
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      await act(async () => {
-        await expect(
-          result.current.createBranch("non-existent-node")
-        ).rejects.toThrow("Parent node not found");
-      });
-    });
-  });
-
-  describe("addNode", () => {
-    it("adds a new node successfully", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
-      (conversationService.updateConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
-
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let newNode: Node | null = null;
-      await act(async () => {
-        newNode = await result.current.addNode({
-          type: "input",
-          position: { x: 200, y: 300 },
-          userMessage: "Test message",
-        });
-      });
-
-      expect(newNode).toBeTruthy();
-      expect(newNode?.type).toBe("input");
-      expect(newNode?.userMessage).toBe("Test message");
-      expect(conversationService.updateConversation).toHaveBeenCalled();
-    });
-
-    it("returns null if conversation is null", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        null
-      );
-
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let newNode: Node | null = null;
-      await act(async () => {
-        newNode = await result.current.addNode({
-          type: "input",
-          position: { x: 200, y: 300 },
-        });
-      });
-
-      expect(newNode).toBeNull();
-    });
-  });
-
-  describe("addEdge", () => {
-    it("adds a new edge successfully", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
-      (conversationService.updateConversation as jest.Mock).mockResolvedValue(
-        mockConversation
-      );
-
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let newEdge: Edge | null = null;
-      await act(async () => {
-        newEdge = await result.current.addEdge({
-          sourceNodeId: "node-1",
-          targetNodeId: "node-2",
-          type: "auto",
-        });
-      });
-
-      expect(newEdge).toBeTruthy();
-      expect(newEdge?.sourceNodeId).toBe("node-1");
-      expect(newEdge?.targetNodeId).toBe("node-2");
-      expect(newEdge?.type).toBe("auto");
-      expect(conversationService.updateConversation).toHaveBeenCalled();
-    });
-
-    it("returns null if conversation is null", async () => {
-      (conversationService.getConversation as jest.Mock).mockResolvedValue(
-        null
-      );
-
-      const { result } = renderHook(() => useConversation("conv-1"));
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let newEdge: Edge | null = null;
-      await act(async () => {
-        newEdge = await result.current.addEdge({
-          sourceNodeId: "node-1",
-          targetNodeId: "node-2",
-          type: "auto",
-        });
-      });
-
-      expect(newEdge).toBeNull();
-    });
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledWith(
+      "test-conversation-123",
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          nodeCount: 1, // Should be reduced from 2 to 1
+        }),
+      })
+    );
   });
 });

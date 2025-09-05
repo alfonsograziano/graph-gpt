@@ -28,6 +28,7 @@ interface UseConversationReturn {
     type: "auto" | "manual" | "markdown";
     metadata?: any;
   }) => Promise<Edge | null>;
+  deleteNode: (nodeId: string) => Promise<void>;
 }
 
 export const useConversation = (id: string): UseConversationReturn => {
@@ -206,6 +207,55 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   };
 
+  const deleteNode = async (nodeId: string): Promise<void> => {
+    if (!conversation) return;
+
+    try {
+      // Find the node to delete
+      const nodeToDelete = conversation.nodes.find(
+        (node) => node.id === nodeId
+      );
+      if (!nodeToDelete) {
+        throw new Error("Node not found");
+      }
+
+      // Remove all edges connected to this node (both incoming and outgoing)
+      const remainingEdges = conversation.edges.filter(
+        (edge) => edge.sourceNodeId !== nodeId && edge.targetNodeId !== nodeId
+      );
+
+      // Remove the node from the nodes array
+      const remainingNodes = conversation.nodes.filter(
+        (node) => node.id !== nodeId
+      );
+
+      // Update metadata
+      const updatedMetadata = {
+        ...conversation.metadata,
+        nodeCount: remainingNodes.length,
+        // If the deleted node was the last active node, clear it
+        lastActiveNodeId:
+          conversation.metadata.lastActiveNodeId === nodeId
+            ? undefined
+            : conversation.metadata.lastActiveNodeId,
+      };
+
+      const updatedConversation = {
+        ...conversation,
+        nodes: remainingNodes,
+        edges: remainingEdges,
+        metadata: updatedMetadata,
+      };
+
+      await updateConversation(updatedConversation);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete node";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchConversation();
   }, [id, fetchConversation]);
@@ -219,5 +269,6 @@ export const useConversation = (id: string): UseConversationReturn => {
     createBranch,
     addNode,
     addEdge,
+    deleteNode,
   };
 };

@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Handle, Position } from "reactflow";
 import { Node } from "@/types";
 import { NodeInput } from "./NodeInput";
 import { NodeLoading } from "./NodeLoading";
 import { NodeCompleted } from "./NodeCompleted";
+import { DeleteButton } from "./DeleteButton";
 
 interface ConversationNodeProps {
   node: Node;
@@ -13,6 +14,7 @@ interface ConversationNodeProps {
   onNodeClick?: (nodeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string) => void;
+  onNodeDelete?: (nodeId: string) => void;
   isStreaming?: boolean;
 }
 
@@ -22,8 +24,10 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   onNodeClick,
   onMessageSubmit,
   onBranchCreate,
+  onNodeDelete,
   isStreaming = false,
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
   const handleNodeClick = () => {
     if (onNodeClick) {
       onNodeClick(node.id);
@@ -39,6 +43,12 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   const handleBranchCreate = () => {
     if (onBranchCreate) {
       onBranchCreate(node.id);
+    }
+  };
+
+  const handleNodeDelete = () => {
+    if (onNodeDelete) {
+      onNodeDelete(node.id);
     }
   };
 
@@ -94,7 +104,12 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   };
 
   return (
-    <div className={getNodeStyling()} onClick={handleNodeClick}>
+    <div
+      className={`${getNodeStyling()} relative`}
+      onClick={handleNodeClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <Handle
         type="target"
         position={Position.Top}
@@ -105,6 +120,11 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         type="source"
         position={Position.Bottom}
         className="w-3 h-3 bg-gray-400"
+      />
+      <DeleteButton
+        onDelete={handleNodeDelete}
+        isVisible={isHovered}
+        nodeId={node.id}
       />
     </div>
   );

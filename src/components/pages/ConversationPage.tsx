@@ -19,8 +19,13 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   conversationId,
 }) => {
   const router = useRouter();
-  const { conversation, isLoading, updateConversation, createBranch } =
-    useConversation(conversationId);
+  const {
+    conversation,
+    isLoading,
+    updateConversation,
+    createBranch,
+    deleteNode,
+  } = useConversation(conversationId);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(conversation?.title || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +67,16 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
       await createBranch(nodeId);
     } catch (error) {
       console.error("Failed to create branch:", error);
+    }
+  };
+
+  const handleNodeDelete = async (nodeId: string) => {
+    if (!conversation) return;
+
+    try {
+      await deleteNode(nodeId);
+    } catch (error) {
+      console.error("Failed to delete node:", error);
     }
   };
 
@@ -230,6 +245,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
             conversation={conversation}
             onMessageSubmit={handleMessageSubmit}
             onBranchCreate={handleBranchCreate}
+            onNodeDelete={handleNodeDelete}
           />
         )}
       </div>
