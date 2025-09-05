@@ -13,8 +13,9 @@ export class ConversationRepository {
     const docObj = serialized as Record<string, unknown>;
     return {
       ...docObj,
-      id: docObj.id as string,
-    } as Conversation;
+      id: docObj.id as string, // Use the custom id field, not _id
+      _id: undefined, // Remove MongoDB's _id field
+    } as unknown as Conversation;
   }
 
   async create(
@@ -36,7 +37,7 @@ export class ConversationRepository {
 
       return {
         ...conversationObj,
-        id: conversationObj._id?.toString() || conversationObj.id,
+        id: conversationObj.id, // Use the custom ID, not MongoDB's _id
         _id: undefined,
       } as Conversation;
     } catch (error) {
