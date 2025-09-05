@@ -61,11 +61,14 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     setIsEditingTitle(false);
   };
 
-  const handleBranchCreate = async (nodeId: string) => {
+  const handleBranchCreate = async (
+    nodeId: string,
+    parentNodeHeight?: number
+  ) => {
     if (!conversation) return;
 
     try {
-      await createBranch(nodeId);
+      await createBranch(nodeId, parentNodeHeight);
     } catch (error) {
       console.error("Failed to create branch:", error);
     }

@@ -1,7 +1,7 @@
 import { Position, Node, Edge } from "../types";
 
 // Constants for node positioning
-export const NODE_SPACING = 200; // Vertical spacing between nodes
+export const NODE_SPACING = 100; // Vertical spacing between nodes
 export const EDGE_OFFSET = 20; // Offset for edge connections
 export const NODE_WIDTH = 300; // Default node width
 export const NODE_HEIGHT = 100; // Default node height
@@ -9,12 +9,19 @@ export const NODE_HEIGHT = 100; // Default node height
 /**
  * Calculate the position for a new node below the parent node
  * @param parentNode - The parent node to position below
+ * @param parentNodeHeight - The actual height of the parent node (optional, falls back to NODE_HEIGHT)
  * @returns Position for the new node
  */
-export function calculateNodePosition(parentNode: Node): Position {
+export function calculateNodePosition(
+  parentNode: Node,
+  parentNodeHeight?: number
+): Position {
+  // Use actual node height if provided, otherwise fall back to default
+  const actualHeight = parentNodeHeight || NODE_HEIGHT;
+
   return {
     x: parentNode.position.x, // Maintain horizontal alignment
-    y: parentNode.position.y + NODE_SPACING, // Position below with spacing
+    y: parentNode.position.y + actualHeight + NODE_SPACING, // Position below with spacing
   };
 }
 

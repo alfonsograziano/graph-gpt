@@ -8,6 +8,7 @@ import ReactFlow, {
   Background,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   ConnectionMode,
   BackgroundVariant,
   NodeTypes,
@@ -25,7 +26,7 @@ interface GraphCanvasProps {
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
-  onBranchCreate?: (nodeId: string) => void;
+  onBranchCreate?: (nodeId: string, parentNodeHeight?: number) => void;
   onNodeDelete?: (nodeId: string) => void;
   onNodePositionUpdate?: (
     nodeId: string,
@@ -48,6 +49,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onNodeDelete,
   onNodePositionUpdate,
 }) => {
+  const { getNode } = useReactFlow();
   // Transform conversation data to React Flow format
   const initialNodes: ReactFlowNodeType[] = useMemo(() => {
     // If conversation has no nodes, we need to create a default input node
@@ -136,17 +138,26 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   // Custom node component wrapper to pass props
   const CustomNodeWrapper = useCallback(
     ({ data }: { data: { node: Node } }) => {
+      const handleBranchCreate = (nodeId: string) => {
+        // Get the React Flow node to access its dimensions
+        const reactFlowNode = getNode(nodeId);
+        const nodeHeight = reactFlowNode?.height ?? undefined;
+
+        // Call the original onBranchCreate with the height
+        onBranchCreate?.(nodeId, nodeHeight);
+      };
+
       return (
         <ConversationNode
           node={data.node}
           onNodeClick={onNodeClick}
           onMessageSubmit={onMessageSubmit}
-          onBranchCreate={onBranchCreate}
+          onBranchCreate={handleBranchCreate}
           onNodeDelete={onNodeDelete}
         />
       );
     },
-    [onNodeClick, onMessageSubmit, onBranchCreate, onNodeDelete]
+    [onNodeClick, onMessageSubmit, onBranchCreate, onNodeDelete, getNode]
   );
 
   // Update node types with wrapper

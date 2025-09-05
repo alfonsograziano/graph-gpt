@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Conversation, Node, Edge, Position } from "@/types";
+import { Conversation, Node, Edge, Position, EdgeMetadata } from "@/types";
 import { FrontendConversationService } from "@/services/frontendConversationService";
-import { testConversation } from "@/testConversation";
 import {
   calculateNodePosition,
   createInputNode,
@@ -14,7 +13,10 @@ interface UseConversationReturn {
   error: string | null;
   refetch: () => Promise<void>;
   updateConversation: (updates: Partial<Conversation>) => Promise<void>;
-  createBranch: (parentNodeId: string) => Promise<Node | null>;
+  createBranch: (
+    parentNodeId: string,
+    parentNodeHeight?: number
+  ) => Promise<Node | null>;
   addNode: (nodeData: {
     type: "input" | "loading" | "completed";
     position: Position;
@@ -26,7 +28,7 @@ interface UseConversationReturn {
     sourceNodeId: string;
     targetNodeId: string;
     type: "auto" | "manual" | "markdown";
-    metadata?: any;
+    metadata?: EdgeMetadata;
   }) => Promise<Edge | null>;
   deleteNode: (nodeId: string) => Promise<void>;
   updateNodePosition: (nodeId: string, position: Position) => Promise<void>;
@@ -74,7 +76,10 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   };
 
-  const createBranch = async (parentNodeId: string): Promise<Node | null> => {
+  const createBranch = async (
+    parentNodeId: string,
+    parentNodeHeight?: number
+  ): Promise<Node | null> => {
     if (!conversation) return null;
 
     try {
@@ -87,7 +92,7 @@ export const useConversation = (id: string): UseConversationReturn => {
       }
 
       // Calculate position for new node
-      const position = calculateNodePosition(parentNode);
+      const position = calculateNodePosition(parentNode, parentNodeHeight);
 
       // Create the new input node
       const newNode: Node = {
@@ -176,7 +181,7 @@ export const useConversation = (id: string): UseConversationReturn => {
     sourceNodeId: string;
     targetNodeId: string;
     type: "auto" | "manual" | "markdown";
-    metadata?: any;
+    metadata?: EdgeMetadata;
   }): Promise<Edge | null> => {
     if (!conversation) return null;
 
