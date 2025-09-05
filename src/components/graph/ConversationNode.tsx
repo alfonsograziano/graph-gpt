@@ -56,7 +56,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     switch (node.type) {
       case "input":
         return (
-          <div className="p-4 min-w-[300px] max-w-[600px] transition-all duration-300 ease-in-out">
+          <div className="p-4 w-[600px] transition-all duration-300 ease-in-out">
             <NodeInput
               onSubmit={handleMessageSubmit}
               placeholder="What do you have in mind?"
@@ -78,7 +78,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         );
       default:
         return (
-          <div className="p-4 min-w-[200px] max-w-[600px]">
+          <div className="p-4 w-[600px]">
             <div className="text-sm text-gray-500">Unknown node type</div>
           </div>
         );

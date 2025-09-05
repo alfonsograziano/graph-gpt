@@ -22,7 +22,7 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
   isHovered = false,
 }) => {
   return (
-    <div className="p-4 min-w-[300px] max-w-[600px] transition-all duration-300 ease-in-out">
+    <div className="p-4 w-[600px] transition-all duration-300 ease-in-out">
       <div className="space-y-3">
         {/* User Message */}
         <div className="text-sm font-medium text-gray-900 leading-relaxed">

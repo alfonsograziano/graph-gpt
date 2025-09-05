@@ -38,7 +38,7 @@ export const NodeInput: React.FC<NodeInputProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex items-center space-x-2 max-w-[600px]"
+      className="flex items-center space-x-2 w-full"
     >
       <input
         type="text"
@@ -55,6 +55,7 @@ export const NodeInput: React.FC<NodeInputProps> = ({
         size="sm"
         variant="primary"
         disabled={!inputValue.trim() || disabled}
+        className="flex-shrink-0"
       >
         Send
       </Button>
