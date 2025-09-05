@@ -9,6 +9,7 @@ interface NodeCompletedProps {
   assistantResponse: string;
   isActive: boolean;
   onBranchCreate: () => void;
+  isStreaming?: boolean;
 }
 
 export const NodeCompleted: React.FC<NodeCompletedProps> = ({
@@ -16,6 +17,7 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
   assistantResponse,
   isActive,
   onBranchCreate,
+  isStreaming = false,
 }) => {
   return (
     <div className="p-4 min-w-[300px] transition-all duration-300 ease-in-out">
@@ -30,7 +32,10 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
 
         {/* Assistant Response with Markdown */}
         <div className="text-sm text-gray-700 leading-relaxed">
-          <MarkdownRenderer content={assistantResponse} />
+          <MarkdownRenderer 
+            content={assistantResponse}
+            isStreaming={isStreaming}
+          />
         </div>
       </div>
 

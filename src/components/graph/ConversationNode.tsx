@@ -13,6 +13,7 @@ interface ConversationNodeProps {
   onNodeClick?: (nodeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string) => void;
+  isStreaming?: boolean;
 }
 
 export const ConversationNode: React.FC<ConversationNodeProps> = ({
@@ -21,6 +22,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   onNodeClick,
   onMessageSubmit,
   onBranchCreate,
+  isStreaming = false,
 }) => {
   const handleNodeClick = () => {
     if (onNodeClick) {
@@ -60,6 +62,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
             assistantResponse={node.assistantResponse}
             isActive={isActive}
             onBranchCreate={handleBranchCreate}
+            isStreaming={isStreaming}
           />
         );
       default:

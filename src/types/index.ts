@@ -158,3 +158,6 @@ export interface ErrorResponse {
   details?: unknown;
   timestamp: string;
 }
+
+// Re-export markdown types
+export * from "./markdown";
