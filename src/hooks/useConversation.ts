@@ -29,6 +29,7 @@ interface UseConversationReturn {
     metadata?: any;
   }) => Promise<Edge | null>;
   deleteNode: (nodeId: string) => Promise<void>;
+  updateNodePosition: (nodeId: string, position: Position) => Promise<void>;
 }
 
 export const useConversation = (id: string): UseConversationReturn => {
@@ -256,12 +257,53 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   };
 
+  const updateNodePosition = async (
+    nodeId: string,
+    position: Position
+  ): Promise<void> => {
+    if (!conversation) return;
+
+    try {
+      // Find the node to update
+      const nodeToUpdate = conversation.nodes.find(
+        (node) => node.id === nodeId
+      );
+      if (!nodeToUpdate) {
+        throw new Error("Node not found");
+      }
+
+      // Update the node position
+      const updatedNode = {
+        ...nodeToUpdate,
+        position,
+        updatedAt: new Date(),
+      };
+
+      // Update the nodes array
+      const updatedNodes = conversation.nodes.map((node) =>
+        node.id === nodeId ? updatedNode : node
+      );
+
+      const updatedConversation = {
+        ...conversation,
+        nodes: updatedNodes,
+      };
+
+      await updateConversation(updatedConversation);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update node position";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchConversation();
   }, [id, fetchConversation]);
 
   return {
-    conversation, //: testConversation,
+    conversation, //testConversation,
     isLoading,
     error,
     refetch: fetchConversation,
@@ -270,5 +312,6 @@ export const useConversation = (id: string): UseConversationReturn => {
     addNode,
     addEdge,
     deleteNode,
+    updateNodePosition,
   };
 };

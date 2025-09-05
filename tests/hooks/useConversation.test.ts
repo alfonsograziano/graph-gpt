@@ -294,3 +294,224 @@ describe("useConversation - deleteNode", () => {
     );
   });
 });
+
+describe("useConversation - updateNodePosition", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFrontendConversationService.getConversation.mockResolvedValue(
+      mockConversation
+    );
+    mockFrontendConversationService.updateConversation.mockImplementation(
+      async (id, updates) => ({ ...mockConversation, ...updates })
+    );
+  });
+
+  it("updates node position successfully", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(result.current.conversation).toEqual(mockConversation);
+
+    // Update node position
+    const newPosition = { x: 300, y: 400 };
+    await act(async () => {
+      await result.current.updateNodePosition("node-1", newPosition);
+    });
+
+    // Verify the position was updated
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledWith(
+      "test-conversation-123",
+      expect.objectContaining({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({
+            id: "node-1",
+            position: newPosition,
+            updatedAt: expect.any(Date),
+          }),
+          expect.objectContaining({
+            id: "node-2",
+            position: { x: 200, y: 200 }, // Should remain unchanged
+          }),
+        ]),
+      })
+    );
+  });
+
+  it("handles update of non-existent node", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Try to update non-existent node
+    await act(async () => {
+      await expect(
+        result.current.updateNodePosition("non-existent-node", {
+          x: 100,
+          y: 100,
+        })
+      ).rejects.toThrow("Node not found");
+    });
+  });
+
+  it("handles update when conversation is null", async () => {
+    mockFrontendConversationService.getConversation.mockResolvedValue(
+      null as any
+    );
+
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Try to update node position when conversation is null
+    await act(async () => {
+      await result.current.updateNodePosition("node-1", { x: 100, y: 100 });
+    });
+
+    // Should not call updateConversation
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).not.toHaveBeenCalled();
+  });
+
+  it("handles update errors gracefully", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Mock updateConversation to throw error
+    mockFrontendConversationService.updateConversation.mockRejectedValue(
+      new Error("Update failed")
+    );
+
+    // Try to update node position
+    await act(async () => {
+      await expect(
+        result.current.updateNodePosition("node-1", { x: 100, y: 100 })
+      ).rejects.toThrow("Update failed");
+    });
+
+    // Verify error state is set
+    expect(result.current.error).toBe("Update failed");
+  });
+
+  it("updates multiple nodes independently", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Update first node position
+    const position1 = { x: 150, y: 150 };
+    await act(async () => {
+      await result.current.updateNodePosition("node-1", position1);
+    });
+
+    // Update second node position
+    const position2 = { x: 250, y: 250 };
+    await act(async () => {
+      await result.current.updateNodePosition("node-2", position2);
+    });
+
+    // Verify both updates were called
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledTimes(2);
+
+    // Verify first update
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenNthCalledWith(
+      1,
+      "test-conversation-123",
+      expect.objectContaining({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({
+            id: "node-1",
+            position: position1,
+          }),
+        ]),
+      })
+    );
+
+    // Verify second update
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenNthCalledWith(
+      2,
+      "test-conversation-123",
+      expect.objectContaining({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({
+            id: "node-2",
+            position: position2,
+          }),
+        ]),
+      })
+    );
+  });
+
+  it("preserves other node properties when updating position", async () => {
+    const { result } = renderHook(() =>
+      useConversation("test-conversation-123")
+    );
+
+    // Wait for initial load
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Update node position
+    const newPosition = { x: 500, y: 600 };
+    await act(async () => {
+      await result.current.updateNodePosition("node-1", newPosition);
+    });
+
+    // Verify other properties are preserved
+    expect(
+      mockFrontendConversationService.updateConversation
+    ).toHaveBeenCalledWith(
+      "test-conversation-123",
+      expect.objectContaining({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({
+            id: "node-1",
+            conversationId: "test-conversation-123",
+            type: "input",
+            userMessage: "Hello",
+            assistantResponse: "",
+            position: newPosition,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          }),
+        ]),
+      })
+    );
+  });
+});

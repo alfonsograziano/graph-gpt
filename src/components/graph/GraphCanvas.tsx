@@ -14,6 +14,7 @@ import ReactFlow, {
   EdgeTypes,
   ReactFlowProvider,
   PanOnScrollMode,
+  NodeDragHandler,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { Conversation, ReactFlowEdge, Node } from "@/types";
@@ -26,6 +27,10 @@ interface GraphCanvasProps {
   onMessageSubmit?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string) => void;
   onNodeDelete?: (nodeId: string) => void;
+  onNodePositionUpdate?: (
+    nodeId: string,
+    position: { x: number; y: number }
+  ) => void;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -41,6 +46,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onMessageSubmit,
   onBranchCreate,
   onNodeDelete,
+  onNodePositionUpdate,
 }) => {
   // Transform conversation data to React Flow format
   const initialNodes: ReactFlowNodeType[] = useMemo(() => {
@@ -54,6 +60,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       id: node.id,
       type: "conversationNode",
       position: node.position,
+      draggable: true,
       data: {
         node: node,
       },
@@ -116,6 +123,16 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     [onEdgeClick]
   );
 
+  const onNodeDragStop: NodeDragHandler = useCallback(
+    (event, node) => {
+      // Update node position when drag stops
+      if (onNodePositionUpdate) {
+        onNodePositionUpdate(node.id, node.position);
+      }
+    },
+    [onNodePositionUpdate]
+  );
+
   // Custom node component wrapper to pass props
   const CustomNodeWrapper = useCallback(
     ({ data }: { data: { node: Node } }) => {
@@ -149,6 +166,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClickHandler}
         onEdgeClick={onEdgeClickHandler}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={customNodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}

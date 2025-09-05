@@ -276,4 +276,180 @@ describe("ConversationNode", () => {
 
     expect(screen.getByTestId("node-input")).toBeInTheDocument();
   });
+
+  describe("Drag and Drop Accessibility", () => {
+    it("has proper drag and drop attributes", () => {
+      const node = createMockNode("input");
+
+      renderWithProvider(
+        <ConversationNode
+          node={node}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      // Find the outermost div that contains the drag attributes
+      const nodeElement = screen.getByTestId("node-input").closest("div");
+      const parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveAttribute("draggable", "true");
+      expect(parentDiv).toHaveAttribute("role", "button");
+      expect(parentDiv).toHaveAttribute("tabIndex", "0");
+      expect(parentDiv).toHaveAttribute(
+        "aria-label",
+        "input node - drag to move"
+      );
+    });
+
+    it("has proper cursor styles for drag operations", () => {
+      const node = createMockNode("input");
+
+      renderWithProvider(
+        <ConversationNode
+          node={node}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      const nodeElement = screen.getByTestId("node-input").closest("div");
+      const parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveClass("cursor-grab", "active:cursor-grabbing");
+    });
+
+    it("has different aria-labels for different node types", () => {
+      const inputNode = createMockNode("input");
+      const loadingNode = createMockNode("loading");
+      const completedNode = createMockNode("completed");
+
+      const { rerender } = renderWithProvider(
+        <ConversationNode
+          node={inputNode}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      let nodeElement = screen.getByTestId("node-input").closest("div");
+      let parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveAttribute(
+        "aria-label",
+        "input node - drag to move"
+      );
+
+      rerender(
+        <ConversationNode
+          node={loadingNode}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      nodeElement = screen.getByTestId("node-loading").closest("div");
+      parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveAttribute(
+        "aria-label",
+        "loading node - drag to move"
+      );
+
+      rerender(
+        <ConversationNode
+          node={completedNode}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      nodeElement = screen.getByTestId("node-completed").closest("div");
+      parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveAttribute(
+        "aria-label",
+        "completed node - drag to move"
+      );
+    });
+
+    it("maintains keyboard accessibility with drag attributes", () => {
+      const node = createMockNode("input");
+
+      renderWithProvider(
+        <ConversationNode
+          node={node}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      const nodeElement = screen.getByTestId("node-input").closest("div");
+      const parentDiv = nodeElement?.parentElement?.parentElement;
+
+      // Should be focusable
+      expect(parentDiv).toHaveAttribute("tabIndex", "0");
+
+      // Should have proper role
+      expect(parentDiv).toHaveAttribute("role", "button");
+
+      // Should be draggable
+      expect(parentDiv).toHaveAttribute("draggable", "true");
+    });
+
+    it("applies drag styles consistently across all node types", () => {
+      const inputNode = createMockNode("input");
+      const loadingNode = createMockNode("loading");
+      const completedNode = createMockNode("completed");
+
+      const { rerender } = renderWithProvider(
+        <ConversationNode
+          node={inputNode}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      let nodeElement = screen.getByTestId("node-input").closest("div");
+      let parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveClass("cursor-grab", "active:cursor-grabbing");
+
+      rerender(
+        <ConversationNode
+          node={loadingNode}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      nodeElement = screen.getByTestId("node-loading").closest("div");
+      parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveClass("cursor-grab", "active:cursor-grabbing");
+
+      rerender(
+        <ConversationNode
+          node={completedNode}
+          onNodeClick={mockOnNodeClick}
+          onMessageSubmit={mockOnMessageSubmit}
+          onBranchCreate={mockOnBranchCreate}
+          onNodeDelete={mockOnNodeDelete}
+        />
+      );
+
+      nodeElement = screen.getByTestId("node-completed").closest("div");
+      parentDiv = nodeElement?.parentElement?.parentElement;
+      expect(parentDiv).toHaveClass("cursor-grab", "active:cursor-grabbing");
+    });
+  });
 });

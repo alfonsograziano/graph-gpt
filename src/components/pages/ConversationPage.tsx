@@ -25,6 +25,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     updateConversation,
     createBranch,
     deleteNode,
+    updateNodePosition,
   } = useConversation(conversationId);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(conversation?.title || "");
@@ -77,6 +78,19 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
       await deleteNode(nodeId);
     } catch (error) {
       console.error("Failed to delete node:", error);
+    }
+  };
+
+  const handleNodePositionUpdate = async (
+    nodeId: string,
+    position: { x: number; y: number }
+  ) => {
+    if (!conversation) return;
+
+    try {
+      await updateNodePosition(nodeId, position);
+    } catch (error) {
+      console.error("Failed to update node position:", error);
     }
   };
 
@@ -246,6 +260,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
             onMessageSubmit={handleMessageSubmit}
             onBranchCreate={handleBranchCreate}
             onNodeDelete={handleNodeDelete}
+            onNodePositionUpdate={handleNodePositionUpdate}
           />
         )}
       </div>

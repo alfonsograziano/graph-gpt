@@ -86,7 +86,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
 
   const getNodeStyling = () => {
     const baseClasses =
-      "border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out cursor-pointer";
+      "border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing";
     const activeClasses = isActive ? "ring-2 ring-blue-500" : "";
 
     switch (node.type) {
@@ -109,6 +109,10 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
       onClick={handleNodeClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${node.type} node - drag to move`}
+      draggable={true}
     >
       <Handle
         type="target"

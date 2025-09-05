@@ -79,3 +79,57 @@ so that I can understand which nodes will be used as context for new messages.
 5. Node activation works correctly regardless of graph complexity
 6. Activation state is maintained until user clicks different node
 7. Path calculation handles complex branching scenarios correctly
+
+## Story 2.6: Branch Creation and Node Positioning
+
+As a user,
+I want to click the plus button to create a new input node that is properly positioned and connected,
+so that I can continue the conversation in a new branch with clear visual relationships.
+
+### Acceptance Criteria
+
+1. Clicking the "+" button spawns a new node with type "input"
+2. New node is positioned below the current node with proper spacing
+3. An edge is automatically created connecting from bottom of current node to top of new node
+4. New node appears with input field ready for user interaction
+5. Node positioning maintains proper visual hierarchy and spacing
+6. Edge connection is visually clear and properly styled
+7. New node becomes the active node and is ready for user input
+
+## Story 2.7: Node Deletion with Hover Delete Button
+
+As a user,
+I want to delete nodes by clicking a delete button that appears when I hover over a node,
+so that I can remove unwanted conversation branches and clean up my graph.
+
+### Acceptance Criteria
+
+1. Delete button appears in the top-right corner of each node when hovered
+2. Delete button is visually distinct and clearly indicates deletion action
+3. Clicking the delete button immediately deletes the node without confirmation
+4. All edges connected to the deleted node are also removed
+5. Node deletion updates the conversation state and syncs with backend
+6. Deleted nodes are completely removed from the graph visualization
+7. Node deletion works for all node types (input, loading, completed)
+8. Graph layout adjusts properly after node deletion
+9. No orphaned edges remain after node deletion
+10. Deletion is permanent and cannot be undone
+
+## Story 2.8: Node Movement with Drag & Drop
+
+As a user,
+I want to move nodes by dragging and dropping them to new positions,
+so that I can reorganize my conversation graph layout and improve visual organization.
+
+### Acceptance Criteria
+
+1. All nodes can be dragged by clicking and holding on them
+2. Visual feedback shows the node being dragged with appropriate cursor changes
+3. Nodes can be dropped at any valid position on the canvas
+4. Node position updates are saved to the conversation state
+5. Position changes sync with the backend through existing API
+6. Dragged nodes maintain their connections to other nodes
+7. Node movement works for all node types (input, loading, completed)
+8. Graph layout updates smoothly after node repositioning
+9. Node positions persist across page refreshes
+10. Drag and drop functionality is accessible and works with keyboard navigation
