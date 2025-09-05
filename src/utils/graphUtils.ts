@@ -1,0 +1,118 @@
+import { Position, Node, Edge } from "../types";
+
+// Constants for node positioning
+export const NODE_SPACING = 200; // Vertical spacing between nodes
+export const EDGE_OFFSET = 20; // Offset for edge connections
+export const NODE_WIDTH = 300; // Default node width
+export const NODE_HEIGHT = 100; // Default node height
+
+/**
+ * Calculate the position for a new node below the parent node
+ * @param parentNode - The parent node to position below
+ * @returns Position for the new node
+ */
+export function calculateNodePosition(parentNode: Node): Position {
+  return {
+    x: parentNode.position.x, // Maintain horizontal alignment
+    y: parentNode.position.y + NODE_SPACING, // Position below with spacing
+  };
+}
+
+/**
+ * Generate a unique node ID
+ * @returns A unique node ID string
+ */
+export function generateNodeId(): string {
+  return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Generate a unique edge ID
+ * @returns A unique edge ID string
+ */
+export function generateEdgeId(): string {
+  return `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Create a new input node with proper attributes
+ * @param conversationId - The conversation ID
+ * @param position - The position for the new node
+ * @param parentNodeId - The parent node ID (optional)
+ * @returns A new input node
+ */
+export function createInputNode(
+  conversationId: string,
+  position: Position,
+  parentNodeId?: string
+): Omit<Node, "id" | "createdAt" | "updatedAt"> {
+  return {
+    conversationId,
+    type: "input",
+    userMessage: "",
+    assistantResponse: "",
+    position,
+    parentNodeId,
+  };
+}
+
+/**
+ * Create a new edge between two nodes
+ * @param conversationId - The conversation ID
+ * @param sourceNodeId - The source node ID
+ * @param targetNodeId - The target node ID
+ * @param type - The edge type (default: "auto")
+ * @returns A new edge
+ */
+export function createEdge(
+  conversationId: string,
+  sourceNodeId: string,
+  targetNodeId: string,
+  type: "auto" | "manual" | "markdown" = "auto"
+): Omit<Edge, "id" | "createdAt"> {
+  return {
+    conversationId,
+    sourceNodeId,
+    targetNodeId,
+    type,
+    metadata: {},
+  };
+}
+
+/**
+ * Check if a position is within canvas boundaries
+ * @param position - The position to check
+ * @param canvasWidth - The canvas width
+ * @param canvasHeight - The canvas height
+ * @returns True if position is within boundaries
+ */
+export function isPositionWithinBounds(
+  position: Position,
+  canvasWidth: number = 1000,
+  canvasHeight: number = 1000
+): boolean {
+  return (
+    position.x >= 0 &&
+    position.x <= canvasWidth - NODE_WIDTH &&
+    position.y >= 0 &&
+    position.y <= canvasHeight - NODE_HEIGHT
+  );
+}
+
+/**
+ * Adjust position to stay within canvas boundaries
+ * @param position - The position to adjust
+ * @param canvasWidth - The canvas width
+ * @param canvasHeight - The canvas height
+ * @returns Adjusted position within boundaries
+ */
+export function adjustPositionToBounds(
+  position: Position,
+  canvasWidth: number = 1000,
+  canvasHeight: number = 1000
+): Position {
+  return {
+    x: Math.max(0, Math.min(position.x, canvasWidth - NODE_WIDTH)),
+    y: Math.max(0, Math.min(position.y, canvasHeight - NODE_HEIGHT)),
+  };
+}

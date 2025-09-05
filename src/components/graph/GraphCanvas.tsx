@@ -24,6 +24,7 @@ interface GraphCanvasProps {
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
+  onBranchCreate?: (nodeId: string) => void;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -37,6 +38,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onNodeClick,
   onEdgeClick,
   onMessageSubmit,
+  onBranchCreate,
 }) => {
   // Transform conversation data to React Flow format
   const initialNodes: ReactFlowNodeType[] = useMemo(() => {
@@ -120,10 +122,11 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
           node={data.node}
           onNodeClick={onNodeClick}
           onMessageSubmit={onMessageSubmit}
+          onBranchCreate={onBranchCreate}
         />
       );
     },
-    [onNodeClick, onMessageSubmit]
+    [onNodeClick, onMessageSubmit, onBranchCreate]
   );
 
   // Update node types with wrapper

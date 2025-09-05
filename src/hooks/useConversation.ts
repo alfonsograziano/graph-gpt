@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Conversation } from "@/types";
+import { Conversation, Node, Edge, Position } from "@/types";
 import { FrontendConversationService } from "@/services/frontendConversationService";
+import { testConversation } from "@/testConversation";
+import {
+  calculateNodePosition,
+  createInputNode,
+  createEdge,
+} from "@/utils/graphUtils";
 
 interface UseConversationReturn {
   conversation: Conversation | null;
@@ -8,6 +14,20 @@ interface UseConversationReturn {
   error: string | null;
   refetch: () => Promise<void>;
   updateConversation: (updates: Partial<Conversation>) => Promise<void>;
+  createBranch: (parentNodeId: string) => Promise<Node | null>;
+  addNode: (nodeData: {
+    type: "input" | "loading" | "completed";
+    position: Position;
+    userMessage?: string;
+    assistantResponse?: string;
+    parentNodeId?: string;
+  }) => Promise<Node | null>;
+  addEdge: (edgeData: {
+    sourceNodeId: string;
+    targetNodeId: string;
+    type: "auto" | "manual" | "markdown";
+    metadata?: any;
+  }) => Promise<Edge | null>;
 }
 
 export const useConversation = (id: string): UseConversationReturn => {
@@ -52,15 +72,152 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   };
 
+  const createBranch = async (parentNodeId: string): Promise<Node | null> => {
+    if (!conversation) return null;
+
+    try {
+      // Find the parent node
+      const parentNode = conversation.nodes.find(
+        (node) => node.id === parentNodeId
+      );
+      if (!parentNode) {
+        throw new Error("Parent node not found");
+      }
+
+      // Calculate position for new node
+      const position = calculateNodePosition(parentNode);
+
+      // Create the new input node
+      const newNode: Node = {
+        ...createInputNode(conversation.id, position, parentNodeId),
+        id: `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Create edge between parent and new node
+      const newEdge: Edge = {
+        ...createEdge(conversation.id, parentNodeId, newNode.id, "auto"),
+        id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+      };
+
+      // Update conversation with new node and edge
+      const updatedConversation = {
+        ...conversation,
+        nodes: [...conversation.nodes, newNode],
+        edges: [...conversation.edges, newEdge],
+        metadata: {
+          ...conversation.metadata,
+          nodeCount: conversation.nodes.length + 1,
+          lastActiveNodeId: newNode.id,
+        },
+      };
+
+      // Update backend
+      await updateConversation(updatedConversation);
+
+      return newNode;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to create branch";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const addNode = async (nodeData: {
+    type: "input" | "loading" | "completed";
+    position: Position;
+    userMessage?: string;
+    assistantResponse?: string;
+    parentNodeId?: string;
+  }): Promise<Node | null> => {
+    if (!conversation) return null;
+
+    try {
+      const newNode: Node = {
+        ...createInputNode(
+          conversation.id,
+          nodeData.position,
+          nodeData.parentNodeId
+        ),
+        id: `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        type: nodeData.type,
+        userMessage: nodeData.userMessage || "",
+        assistantResponse: nodeData.assistantResponse || "",
+      };
+
+      const updatedConversation = {
+        ...conversation,
+        nodes: [...conversation.nodes, newNode],
+        metadata: {
+          ...conversation.metadata,
+          nodeCount: conversation.nodes.length + 1,
+          lastActiveNodeId: newNode.id,
+        },
+      };
+
+      await updateConversation(updatedConversation);
+      return newNode;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add node";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const addEdge = async (edgeData: {
+    sourceNodeId: string;
+    targetNodeId: string;
+    type: "auto" | "manual" | "markdown";
+    metadata?: any;
+  }): Promise<Edge | null> => {
+    if (!conversation) return null;
+
+    try {
+      const newEdge: Edge = {
+        ...createEdge(
+          conversation.id,
+          edgeData.sourceNodeId,
+          edgeData.targetNodeId,
+          edgeData.type
+        ),
+        id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+        metadata: edgeData.metadata,
+      };
+
+      const updatedConversation = {
+        ...conversation,
+        edges: [...conversation.edges, newEdge],
+      };
+
+      await updateConversation(updatedConversation);
+      return newEdge;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add edge";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchConversation();
   }, [id, fetchConversation]);
 
   return {
-    conversation,
+    conversation, //: testConversation,
     isLoading,
     error,
     refetch: fetchConversation,
     updateConversation,
+    createBranch,
+    addNode,
+    addEdge,
   };
 };

@@ -19,7 +19,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   conversationId,
 }) => {
   const router = useRouter();
-  const { conversation, isLoading, updateConversation } =
+  const { conversation, isLoading, updateConversation, createBranch } =
     useConversation(conversationId);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(conversation?.title || "");
@@ -53,6 +53,16 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   const handleTitleCancel = () => {
     setTitle(conversation?.title || "");
     setIsEditingTitle(false);
+  };
+
+  const handleBranchCreate = async (nodeId: string) => {
+    if (!conversation) return;
+
+    try {
+      await createBranch(nodeId);
+    } catch (error) {
+      console.error("Failed to create branch:", error);
+    }
   };
 
   const handleMessageSubmit = async (message: string, nodeId: string) => {
@@ -219,6 +229,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
           <GraphCanvas
             conversation={conversation}
             onMessageSubmit={handleMessageSubmit}
+            onBranchCreate={handleBranchCreate}
           />
         )}
       </div>
