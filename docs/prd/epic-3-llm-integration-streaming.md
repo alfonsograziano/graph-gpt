@@ -81,3 +81,19 @@ so that I can develop without external API dependencies.
 5. Development environment automatically uses mock API
 6. Mock API maintains same interface as real OpenAI API
 7. Mock responses are realistic and useful for development
+
+## Story 3.6: Node Submission to OpenAI API Integration
+
+As a user,
+I want my submitted message to trigger an actual OpenAI API call,
+so that I receive a real LLM response instead of just a loading state.
+
+### Acceptance Criteria
+
+1. When a user submits a message, the system calls the `/api/chat` endpoint
+2. The system passes the active node path as context to the API
+3. The API processes the request and returns an LLM response
+4. The node transitions from loading to completed state with the response
+5. Error handling is implemented for failed API calls
+6. The conversation state is properly updated with the response
+7. Context flattening is integrated with the API call
