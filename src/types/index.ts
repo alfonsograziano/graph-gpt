@@ -41,7 +41,7 @@ export interface Node {
   id: string;
   conversationId: string;
   type: NodeType;
-  userMessage: string;
+  userMessage?: string;
   assistantResponse: string;
   position: Position;
   createdAt: Date;

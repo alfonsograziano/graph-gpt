@@ -53,37 +53,35 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     setIsEditingTitle(false);
   };
 
-  const handleMessageSubmit = async (message: string) => {
+  const handleMessageSubmit = async (message: string, nodeId: string) => {
     if (!conversation || isSubmittingMessage) return;
 
     setIsSubmittingMessage(true);
 
     try {
-      // Create a new input node with the user message
-      const newNode: Node = {
-        id: `node-${Date.now()}`,
-        conversationId: conversation.id,
-        type: "input",
-        userMessage: message,
-        assistantResponse: "",
-        position: { x: 400, y: 300 },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      // Find the specific node that submitted the message and update its type to "loading"
+      const updatedNodes = conversation.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            type: "loading" as const,
+            userMessage: message,
+            updatedAt: new Date(),
+          };
+        }
+        return node;
+      });
 
-      // Update the conversation with the new node
-      const updatedNodes = [...conversation.nodes, newNode];
       await updateConversation({
         nodes: updatedNodes,
         metadata: {
           ...conversation.metadata,
-          nodeCount: updatedNodes.length,
-          lastActiveNodeId: newNode.id,
+          lastActiveNodeId: nodeId,
         },
       });
 
       // TODO: In future stories, this will trigger LLM processing
-      // For now, we'll just show the input node
+      // For now, we'll just show the loading node
     } catch (error) {
       console.error("Failed to submit message:", error);
     } finally {
@@ -93,7 +91,30 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
 
   useEffect(() => {
     setTitle(conversation?.title || "");
-  }, [conversation]);
+
+    // If conversation has no nodes, create a default input node
+    if (conversation && conversation.nodes.length === 0) {
+      const defaultNode: Node = {
+        id: "default-input-node",
+        conversationId: conversation.id,
+        type: "input",
+        userMessage: "",
+        assistantResponse: "",
+        position: { x: 400, y: 300 },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      updateConversation({
+        nodes: [defaultNode],
+        metadata: {
+          ...conversation.metadata,
+          nodeCount: 1,
+          lastActiveNodeId: defaultNode.id,
+        },
+      }).catch(console.error);
+    }
+  }, [conversation, updateConversation]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">

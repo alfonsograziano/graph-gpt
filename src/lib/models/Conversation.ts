@@ -27,7 +27,7 @@ const NodeSchema = new Schema<Node>(
       enum: ["input", "loading", "completed"] as NodeType[],
       required: true,
     },
-    userMessage: { type: String, required: true },
+    userMessage: { type: String, required: false, default: "" },
     assistantResponse: { type: String, default: "" },
     position: { type: PositionSchema, required: true },
     createdAt: { type: Date, default: Date.now },

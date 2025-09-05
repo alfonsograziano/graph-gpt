@@ -23,7 +23,7 @@ interface GraphCanvasProps {
   conversation: Conversation;
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
-  onMessageSubmit?: (message: string) => void;
+  onMessageSubmit?: (message: string, nodeId: string) => void;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -40,29 +40,10 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
 }) => {
   // Transform conversation data to React Flow format
   const initialNodes: ReactFlowNodeType[] = useMemo(() => {
-    // If conversation has no nodes, create a default input node
+    // If conversation has no nodes, we need to create a default input node
+    // This will be handled by the parent component when the user first interacts
     if (conversation.nodes.length === 0) {
-      const defaultNode: Node = {
-        id: "default-input-node",
-        conversationId: conversation.id,
-        type: "input",
-        userMessage: "",
-        assistantResponse: "",
-        position: { x: 400, y: 300 },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      return [
-        {
-          id: defaultNode.id,
-          type: "conversationNode",
-          position: defaultNode.position,
-          data: {
-            node: defaultNode,
-          },
-        },
-      ];
+      return [];
     }
 
     return conversation.nodes.map((node) => ({
@@ -73,7 +54,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         node: node,
       },
     }));
-  }, [conversation.nodes, conversation.id]);
+  }, [conversation.nodes]);
 
   const initialEdges: ReactFlowEdge[] = useMemo(() => {
     return conversation.edges.map((edge) => ({
@@ -89,8 +70,18 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     }));
   }, [conversation.edges]);
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update nodes when conversation data changes
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
+  // Update edges when conversation data changes
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
 
   // Auto-fit view when nodes change
   useEffect(() => {

@@ -11,7 +11,7 @@ interface ConversationNodeProps {
   node: Node;
   isActive?: boolean;
   onNodeClick?: (nodeId: string) => void;
-  onMessageSubmit?: (message: string) => void;
+  onMessageSubmit?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string) => void;
 }
 
@@ -30,7 +30,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
 
   const handleMessageSubmit = (message: string) => {
     if (onMessageSubmit) {
-      onMessageSubmit(message);
+      onMessageSubmit(message, node.id);
     }
   };
 
@@ -52,11 +52,11 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           </div>
         );
       case "loading":
-        return <NodeLoading message={node.userMessage} />;
+        return <NodeLoading message={node.userMessage || ""} />;
       case "completed":
         return (
           <NodeCompleted
-            userMessage={node.userMessage}
+            userMessage={node.userMessage || ""}
             assistantResponse={node.assistantResponse}
             isActive={isActive}
             onBranchCreate={handleBranchCreate}
