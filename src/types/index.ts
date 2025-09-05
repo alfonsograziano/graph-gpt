@@ -105,6 +105,40 @@ export interface EdgeDocument extends Omit<Edge, "id"> {
   _id?: string;
 }
 
+// Chat types
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatRequest {
+  message: string;
+  context: ChatMessage[];
+  nodeId: string;
+  conversationId: string;
+}
+
+export interface ChatResponse {
+  content: string;
+  nodeId: string;
+  conversationId: string;
+  timestamp: Date;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+// OpenAI API types
+export interface OpenAIConfig {
+  apiKey: string;
+  model: string;
+  maxTokens: number;
+  temperature: number;
+  baseUrl: string;
+}
+
 // Error types
 export interface DatabaseError {
   code: string;
@@ -116,4 +150,11 @@ export interface ValidationError {
   field: string;
   message: string;
   value?: unknown;
+}
+
+export interface ErrorResponse {
+  error: string;
+  code?: string;
+  details?: unknown;
+  timestamp: string;
 }
