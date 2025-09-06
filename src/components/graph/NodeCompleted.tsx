@@ -3,12 +3,12 @@
 import React from "react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { BranchButton } from "./BranchButton";
+import { UserMessage } from "./UserMessage";
 
 interface NodeCompletedProps {
   userMessage: string;
   assistantResponse: string;
   onBranchCreate?: () => void;
-  isStreaming?: boolean;
   isHovered?: boolean;
 }
 
@@ -22,9 +22,7 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
     <div className="p-4 w-[600px] transition-all duration-300 ease-in-out">
       <div className="space-y-3">
         {/* User Message */}
-        <div className="text-sm font-medium text-gray-900 leading-relaxed">
-          {userMessage}
-        </div>
+        <UserMessage message={userMessage} />
         {/* Separator */}
         <div className="border-t border-gray-200 my-3"></div>
         {/* Assistant Response with Markdown */}

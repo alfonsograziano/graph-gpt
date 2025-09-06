@@ -86,7 +86,6 @@ export function useLLMStream(
               if (line.trim()) {
                 try {
                   const chunkData = JSON.parse(line);
-                  console.log("chunkData", chunkData);
                   if (chunkData.error) {
                     throw new Error(chunkData.error);
                   }

@@ -7,6 +7,7 @@ import { NodeInput } from "./NodeInput";
 import { NodeLoading } from "./NodeLoading";
 import { NodeCompleted } from "./NodeCompleted";
 import { DeleteButton } from "./DeleteButton";
+import { UserMessage } from "./UserMessage";
 
 interface ConversationNodeProps {
   node: Node;
@@ -88,12 +89,10 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         return <NodeLoading message={node.userMessage || ""} />;
       case "generating":
         return (
-          <div className="p-4 w-[600px] bg-gray-200">
+          <div className="p-4 w-[600px]">
             <div className="space-y-3">
               {/* User Message */}
-              <div className="text-sm font-medium text-gray-900 leading-relaxed">
-                {node.userMessage || ""}
-              </div>
+              <UserMessage message={node.userMessage || ""} />
 
               {/* Separator */}
               <div className="border-t border-gray-200 my-3"></div>
@@ -110,8 +109,6 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           <NodeCompleted
             userMessage={node.userMessage || ""}
             assistantResponse={streamingContent || node.assistantResponse}
-            isActive={isActive}
-            isStreaming={true}
             isHovered={isHovered}
           />
         );
@@ -120,7 +117,6 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           <NodeCompleted
             userMessage={node.userMessage || ""}
             assistantResponse={node.assistantResponse}
-            isActive={isActive}
             onBranchCreate={handleBranchCreate}
             isHovered={isHovered}
           />
