@@ -21,7 +21,7 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
   return (
     <button
       onClick={handleDelete}
-      className={`absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200 ease-in-out ${
+      className={`absolute -top-3 -right-3 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200 ease-in-out ${
         isVisible ? "opacity-100 scale-100" : "opacity-0 scale-75"
       }`}
       aria-label={`Delete node ${nodeId}`}

@@ -40,7 +40,10 @@ export const HomePage: React.FC = () => {
       setIsCreating(true);
       setError(null);
 
-      const title = `New Conversation ${new Date().toLocaleDateString()}`;
+      const title = `New Conversation ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString(
+        "en-US",
+        { hour: "2-digit", minute: "2-digit", hour12: false }
+      )}`;
       const newConversation =
         await FrontendConversationService.createConversation(title);
 
