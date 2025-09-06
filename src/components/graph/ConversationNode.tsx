@@ -9,6 +9,8 @@ import { NodeLoading } from "./NodeLoading";
 import { NodeCompleted } from "./NodeCompleted";
 import { DeleteButton } from "./DeleteButton";
 import { UserMessage } from "./UserMessage";
+import { ContextBanner } from "./ContextBanner";
+import { findContextSnippetForNode } from "@/utils/graphUtils";
 
 interface ConversationNodeProps {
   node: Node;
@@ -25,6 +27,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const {
+    conversation,
     handleMessageSubmit,
     createBranch,
     createDirectionalBranch,
@@ -34,6 +37,11 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
 
   // Use the isActive prop directly, defaulting to false if undefined
   const isActive = propIsActive ?? false;
+
+  // Find context snippet for this node if it has incoming edges
+  const contextSnippet = conversation
+    ? findContextSnippetForNode(conversation, node.id)
+    : undefined;
   const handleNodeClick = (e: React.MouseEvent) => {
     // Don't trigger node click if clicking on buttons
     // But allow clicks on input fields to still activate the node
@@ -190,6 +198,9 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
       aria-label={`${node.type} node - drag to move`}
       draggable={true}
     >
+      {/* Context Banner - only show if there's a context snippet */}
+      {contextSnippet && <ContextBanner contextSnippet={contextSnippet} />}
+
       <Handle
         type="target"
         position={Position.Top}
