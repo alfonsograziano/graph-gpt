@@ -127,7 +127,8 @@ export const MarkdownItemWithHandles: React.FC<
           pointerEvents: "none",
           zIndex: 1,
           visibility: "visible",
-          backgroundColor: "red",
+          backgroundColor: "transparent",
+          border: "none",
         }}
         className="react-flow__handle"
         onConnect={(params) => {
@@ -154,7 +155,8 @@ export const MarkdownItemWithHandles: React.FC<
           pointerEvents: "none",
           zIndex: 1,
           visibility: "visible",
-          backgroundColor: "blue",
+          backgroundColor: "transparent",
+          border: "none",
         }}
         className="react-flow__handle"
         onConnect={(params) => {
