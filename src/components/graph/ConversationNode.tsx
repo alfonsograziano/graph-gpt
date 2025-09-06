@@ -13,9 +13,10 @@ interface ConversationNodeProps {
   isActive?: boolean;
   onNodeClick?: (nodeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
+  onMessageChange?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string) => void;
   onNodeDelete?: (nodeId: string) => void;
-  isStreaming?: boolean;
+  streamingContent?: string;
 }
 
 export const ConversationNode: React.FC<ConversationNodeProps> = ({
@@ -23,9 +24,10 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   isActive: propIsActive,
   onNodeClick,
   onMessageSubmit,
+  onMessageChange,
   onBranchCreate,
   onNodeDelete,
-  isStreaming = false,
+  streamingContent,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -52,6 +54,12 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     }
   };
 
+  const handleMessageChange = (message: string) => {
+    if (onMessageChange) {
+      onMessageChange(message, node.id);
+    }
+  };
+
   const handleBranchCreate = () => {
     if (onBranchCreate) {
       onBranchCreate(node.id);
@@ -71,12 +79,42 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           <div className="p-4 w-[600px] transition-all duration-300 ease-in-out">
             <NodeInput
               onSubmit={handleMessageSubmit}
+              onInputChange={handleMessageChange}
               placeholder="What do you have in mind?"
             />
           </div>
         );
       case "loading":
         return <NodeLoading message={node.userMessage || ""} />;
+      case "generating":
+        return (
+          <div className="p-4 w-[600px] bg-gray-200">
+            <div className="space-y-3">
+              {/* User Message */}
+              <div className="text-sm font-medium text-gray-900 leading-relaxed">
+                {node.userMessage || ""}
+              </div>
+
+              {/* Separator */}
+              <div className="border-t border-gray-200 my-3"></div>
+            </div>
+
+            <div className="flex items-center space-x-2 text-gray-600">
+              <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+              <span className="text-sm">Generating response...</span>
+            </div>
+          </div>
+        );
+      case "streaming":
+        return (
+          <NodeCompleted
+            userMessage={node.userMessage || ""}
+            assistantResponse={streamingContent || node.assistantResponse}
+            isActive={isActive}
+            isStreaming={true}
+            isHovered={isHovered}
+          />
+        );
       case "completed":
         return (
           <NodeCompleted
@@ -84,7 +122,6 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
             assistantResponse={node.assistantResponse}
             isActive={isActive}
             onBranchCreate={handleBranchCreate}
-            isStreaming={isStreaming}
             isHovered={isHovered}
           />
         );
@@ -111,6 +148,10 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         case "input":
           return `${baseClasses} ${inactiveClasses} bg-gray-100`;
         case "loading":
+          return `${baseClasses} ${inactiveClasses} bg-gray-200`;
+        case "generating":
+          return `${baseClasses} ${inactiveClasses} bg-gray-200`;
+        case "streaming":
           return `${baseClasses} ${inactiveClasses} bg-gray-200`;
         case "completed":
           return `${baseClasses} ${inactiveClasses} bg-gray-100`;

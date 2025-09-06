@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { GraphCanvas } from "@/components/graph/GraphCanvas";
 import { EditableTitle } from "@/components/ui/EditableTitle";
 import { Button } from "@/components/ui/Button";
+import { StreamingToggle } from "@/components/ui/StreamingToggle";
 import { useConversation } from "@/hooks/useConversation";
+import { useLLMStream } from "@/hooks/useLLMStream";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Node, ChatRequest } from "@/types";
+import { Node, ChatRequest, StreamingChatRequest } from "@/types";
 import { apiClient } from "@/services/apiClient";
 import { contextService } from "@/services/contextService";
 
@@ -33,6 +35,106 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   const [title, setTitle] = useState(conversation?.title || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmittingMessage, setIsSubmittingMessage] = useState(false);
+  const [streamingEnabled, setStreamingEnabled] = useState(false);
+  const [streamingNodeId, setStreamingNodeId] = useState<string | null>(null);
+  const [streamingContent, setStreamingContent] = useState<string>("");
+  const hasUpdatedToStreaming = useRef(false);
+  const streamingNodeIdRef = useRef<string | null>(null);
+  const streamingMessageRef = useRef<string>("");
+
+  // Define streaming handlers first
+  const handleStreamingComplete = async (fullContent: string) => {
+    const currentNodeId = streamingNodeIdRef.current;
+    if (!conversation || !currentNodeId) return;
+
+    try {
+      // Update the node with the complete streaming response
+      const finalUpdatedNodes = conversation.nodes.map((node) => {
+        if (node.id === currentNodeId) {
+          return {
+            ...node,
+            type: "completed" as const,
+            userMessage: streamingMessageRef.current, // Use the stored message
+            assistantResponse: fullContent,
+            updatedAt: new Date(),
+          };
+        }
+        return node;
+      });
+      // Update the database
+      await updateConversation({
+        ...conversation,
+        nodes: finalUpdatedNodes,
+        metadata: {
+          ...conversation.metadata,
+          lastActiveNodeId: currentNodeId,
+        },
+      });
+
+      // Reset streaming state after database update
+      setStreamingNodeId(null);
+      streamingNodeIdRef.current = null;
+      streamingMessageRef.current = "";
+      hasUpdatedToStreaming.current = false;
+    } catch (error) {
+      console.error("Failed to complete streaming:", error);
+      handleStreamingError(
+        error instanceof Error
+          ? error
+          : new Error("Streaming completion failed")
+      );
+    }
+  };
+
+  const handleStreamingError = async (error: Error) => {
+    const currentNodeId = streamingNodeIdRef.current;
+    if (!conversation || !currentNodeId) return;
+
+    try {
+      // Update node to show error state
+      const errorNodes = conversation.nodes.map((node) => {
+        if (node.id === currentNodeId) {
+          return {
+            ...node,
+            type: "input" as const, // Revert to input state on error
+            assistantResponse: `Error: ${error.message}`,
+            updatedAt: new Date(),
+          };
+        }
+        return node;
+      });
+
+      // Update the database
+      await updateConversation({
+        ...conversation,
+        nodes: errorNodes,
+        metadata: {
+          ...conversation.metadata,
+          lastActiveNodeId: currentNodeId,
+        },
+      });
+
+      // Reset streaming state
+      setStreamingNodeId(null);
+      streamingNodeIdRef.current = null;
+      streamingMessageRef.current = "";
+      hasUpdatedToStreaming.current = false;
+    } catch (updateError) {
+      console.error("Failed to handle streaming error:", updateError);
+    }
+  };
+
+  // Initialize streaming hook
+  const {
+    content: hookStreamingContent,
+    isStreaming,
+    isGenerating,
+    startStream,
+    reset: resetStream,
+  } = useLLMStream({
+    onComplete: handleStreamingComplete,
+    onError: handleStreamingError,
+  });
 
   const handleBackToHome = () => {
     router.push("/");
@@ -103,71 +205,123 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     setActiveNodePath(nodeId);
   };
 
+  const handleMessageChange = () => {
+    // No-op: We don't need to update the conversation on every keystroke
+    // The userMessage will be set when the form is submitted
+  };
+
   const handleMessageSubmit = async (message: string, nodeId: string) => {
     if (!conversation || isSubmittingMessage) return;
 
     setIsSubmittingMessage(true);
 
     try {
-      // Find the specific node that submitted the message and update its type to "loading"
-      const updatedNodes = conversation.nodes.map((node) => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            type: "loading" as const,
-            userMessage: message,
-            updatedAt: new Date(),
-          };
-        }
-        return node;
-      });
-
-      await updateConversation({
-        nodes: updatedNodes,
-        metadata: {
-          ...conversation.metadata,
-          lastActiveNodeId: nodeId,
-        },
-      });
-
       // Get conversation context for the API call
       const context = contextService.getConversationContext(
         conversation,
         nodeId
       );
 
-      // Create chat request
-      const chatRequest: ChatRequest = {
-        message,
-        context,
-        nodeId,
-        conversationId: conversation.id,
-      };
+      if (streamingEnabled) {
+        // Handle streaming request
+        setStreamingNodeId(nodeId);
+        streamingNodeIdRef.current = nodeId;
+        streamingMessageRef.current = message;
 
-      // Send request to chat API
-      const response = await apiClient.sendChatRequest(chatRequest);
+        // Update node to generating state
+        const generatingNodes = conversation.nodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              type: "generating" as const,
+              userMessage: message,
+              assistantResponse: "",
+              updatedAt: new Date(),
+            };
+          }
+          return node;
+        });
 
-      // Update the node with the assistant response
-      const finalUpdatedNodes = conversation.nodes.map((node) => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            type: "completed" as const,
-            userMessage: message,
-            assistantResponse: response.content,
-            updatedAt: new Date(),
-          };
-        }
-        return node;
-      });
+        await updateConversation({
+          ...conversation,
+          nodes: generatingNodes,
+          metadata: {
+            ...conversation.metadata,
+            lastActiveNodeId: nodeId,
+          },
+        });
 
-      await updateConversation({
-        nodes: finalUpdatedNodes,
-        metadata: {
-          ...conversation.metadata,
-          lastActiveNodeId: nodeId,
-        },
-      });
+        // Create streaming chat request
+        const streamingRequest: StreamingChatRequest = {
+          message,
+          context,
+          nodeId,
+          conversationId: conversation.id,
+          streaming: true,
+        };
+
+        // Reset the streaming state flag
+        hasUpdatedToStreaming.current = false;
+
+        // Start streaming
+        await startStream(streamingRequest);
+      } else {
+        // Handle non-streaming request (existing logic)
+        const updatedNodes = conversation.nodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              type: "loading" as const,
+              userMessage: message,
+              updatedAt: new Date(),
+            };
+          }
+          return node;
+        });
+
+        await updateConversation({
+          ...conversation,
+          nodes: updatedNodes,
+          metadata: {
+            ...conversation.metadata,
+            lastActiveNodeId: nodeId,
+          },
+        });
+
+        // Create chat request
+        const chatRequest: ChatRequest = {
+          message,
+          context,
+          nodeId,
+          conversationId: conversation.id,
+        };
+
+        // Send request to chat API
+        const response = await apiClient.sendChatRequest(chatRequest);
+
+        // Update the node with the assistant response
+        const finalUpdatedNodes = conversation.nodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              type: "completed" as const,
+              userMessage: message,
+              assistantResponse: response.content,
+              updatedAt: new Date(),
+            };
+          }
+          return node;
+        });
+
+        await updateConversation({
+          ...conversation,
+          nodes: finalUpdatedNodes,
+          metadata: {
+            ...conversation.metadata,
+            lastActiveNodeId: nodeId,
+          },
+        });
+      }
     } catch (error) {
       console.error("Failed to submit message:", error);
 
@@ -186,6 +340,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
       });
 
       await updateConversation({
+        ...conversation,
         nodes: errorNodes,
         metadata: {
           ...conversation.metadata,
@@ -196,6 +351,55 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
       setIsSubmittingMessage(false);
     }
   };
+
+  // Reset stream when streamingNodeId is cleared
+  useEffect(() => {
+    if (!streamingNodeId) {
+      resetStream();
+      streamingNodeIdRef.current = null;
+      streamingMessageRef.current = "";
+      hasUpdatedToStreaming.current = false;
+    }
+  }, [streamingNodeId, resetStream]);
+
+  // Update local streaming content for UI display
+  useEffect(() => {
+    if (hookStreamingContent) {
+      setStreamingContent(hookStreamingContent);
+
+      // Update node to streaming state when content starts arriving
+      if (streamingNodeId && conversation && !hasUpdatedToStreaming.current) {
+        hasUpdatedToStreaming.current = true;
+
+        const updatedNodes = conversation.nodes.map((node: Node) => {
+          if (node.id === streamingNodeId) {
+            return {
+              ...node,
+              type: "streaming" as const,
+              updatedAt: new Date(),
+            };
+          }
+          return node;
+        });
+
+        // Update database to show streaming state
+        updateConversation({
+          nodes: updatedNodes,
+          metadata: {
+            ...conversation.metadata,
+            lastActiveNodeId: streamingNodeId,
+          },
+        });
+      }
+    }
+  }, [hookStreamingContent, streamingNodeId, conversation, updateConversation]);
+
+  // Reset streaming content when streaming stops
+  useEffect(() => {
+    if (!isStreaming && !isGenerating) {
+      setStreamingContent("");
+    }
+  }, [isStreaming, isGenerating]);
 
   useEffect(() => {
     setTitle(conversation?.title || "");
@@ -269,12 +473,22 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
             activeNodePath={activeNodePath}
             onNodeClick={handleNodeClick}
             onMessageSubmit={handleMessageSubmit}
+            onMessageChange={handleMessageChange}
             onBranchCreate={handleBranchCreate}
             onNodeDelete={handleNodeDelete}
             onNodePositionUpdate={handleNodePositionUpdate}
+            streamingNodeId={streamingNodeId}
+            streamingContent={streamingContent}
+            isStreaming={isStreaming}
           />
         )}
       </div>
+
+      {/* Streaming Toggle */}
+      <StreamingToggle
+        enabled={streamingEnabled}
+        onToggle={setStreamingEnabled}
+      />
     </div>
   );
 };

@@ -7,8 +7,7 @@ import { BranchButton } from "./BranchButton";
 interface NodeCompletedProps {
   userMessage: string;
   assistantResponse: string;
-  isActive: boolean;
-  onBranchCreate: () => void;
+  onBranchCreate?: () => void;
   isStreaming?: boolean;
   isHovered?: boolean;
 }
@@ -16,9 +15,7 @@ interface NodeCompletedProps {
 export const NodeCompleted: React.FC<NodeCompletedProps> = ({
   userMessage,
   assistantResponse,
-  isActive,
   onBranchCreate,
-  isStreaming = false,
   isHovered = false,
 }) => {
   return (
@@ -28,16 +25,11 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
         <div className="text-sm font-medium text-gray-900 leading-relaxed">
           {userMessage}
         </div>
-
         {/* Separator */}
         <div className="border-t border-gray-200 my-3"></div>
-
         {/* Assistant Response with Markdown */}
         <div className="text-sm text-gray-700 leading-relaxed">
-          <MarkdownRenderer
-            content={assistantResponse}
-            isStreaming={isStreaming}
-          />
+          <MarkdownRenderer content={assistantResponse} isStreaming={false} />
         </div>
       </div>
 
@@ -45,9 +37,11 @@ export const NodeCompleted: React.FC<NodeCompletedProps> = ({
       <div className="mt-4"></div>
 
       {/* Branch Creation Button */}
-      <div className="absolute bottom-[-14px] left-1/2 transform -translate-x-1/2 z-[100]">
-        <BranchButton onClick={onBranchCreate} isVisible={isHovered} />
-      </div>
+      {onBranchCreate && (
+        <div className="absolute bottom-[-14px] left-1/2 transform -translate-x-1/2 z-[100]">
+          <BranchButton onClick={onBranchCreate} isVisible={isHovered} />
+        </div>
+      )}
     </div>
   );
 };
