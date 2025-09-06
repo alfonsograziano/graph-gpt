@@ -203,3 +203,55 @@ export function getLeafNodes(nodes: Node[], edges: Edge[]): Node[] {
   const sourceNodeIds = edges.map((edge) => edge.sourceNodeId);
   return nodes.filter((node) => !sourceNodeIds.includes(node.id));
 }
+
+/**
+ * Get all edges that are in the active path
+ * @param activeNodePath - Array of node IDs in the active path
+ * @param edges - Array of all edges
+ * @returns Array of edge IDs that are in the active path
+ */
+export function getActiveEdges(
+  activeNodePath: string[],
+  edges: Edge[]
+): string[] {
+  if (activeNodePath.length < 2) {
+    return [];
+  }
+
+  const activeEdgeIds: string[] = [];
+
+  // For each consecutive pair of nodes in the active path,
+  // find the edge that connects them
+  for (let i = 0; i < activeNodePath.length - 1; i++) {
+    const currentNodeId = activeNodePath[i];
+    const nextNodeId = activeNodePath[i + 1];
+
+    // Find edge from nextNodeId to currentNodeId (since path goes from leaf to root)
+    const connectingEdge = edges.find(
+      (edge) =>
+        edge.sourceNodeId === nextNodeId && edge.targetNodeId === currentNodeId
+    );
+
+    if (connectingEdge) {
+      activeEdgeIds.push(connectingEdge.id);
+    }
+  }
+
+  return activeEdgeIds;
+}
+
+/**
+ * Check if an edge is active (in the active path)
+ * @param edgeId - The ID of the edge to check
+ * @param activeNodePath - Array of node IDs in the active path
+ * @param edges - Array of all edges
+ * @returns True if the edge is active, false otherwise
+ */
+export function isEdgeActive(
+  edgeId: string,
+  activeNodePath: string[],
+  edges: Edge[]
+): boolean {
+  const activeEdges = getActiveEdges(activeNodePath, edges);
+  return activeEdges.includes(edgeId);
+}

@@ -20,6 +20,8 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import { Conversation, ReactFlowEdge, Node } from "@/types";
 import { ConversationNode } from "./ConversationNode";
+import { ActiveEdge } from "./ActiveEdge";
+import { isEdgeActive } from "@/utils/graphTraversal";
 
 interface GraphCanvasProps {
   conversation: Conversation;
@@ -38,7 +40,7 @@ interface GraphCanvasProps {
 // Custom node types - will be defined inline with wrapper
 
 const edgeTypes: EdgeTypes = {
-  // Use default React Flow edges
+  activeEdge: ActiveEdge,
 };
 
 const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
@@ -76,14 +78,15 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       id: edge.id,
       source: edge.sourceNodeId,
       target: edge.targetNodeId,
-      type: "default",
+      type: "activeEdge",
       data: {
         type: edge.type,
         createdAt: edge.createdAt,
         metadata: edge.metadata,
+        isActive: isEdgeActive(edge.id, activeNodePath, conversation.edges),
       },
     }));
-  }, [conversation.edges]);
+  }, [conversation.edges, activeNodePath]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
