@@ -1,12 +1,64 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 import { MarkdownRendererProps } from "@/types/markdown";
 import { sanitizeMarkdown } from "@/utils/markdownUtils";
+import { Handle, Position } from "reactflow";
+
+export const MarkdownItemWithHandles: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
+  const [showHandles, setShowHandles] = useState(false);
+
+  return (
+    <div
+      className="relative inline-block w-full"
+      onMouseEnter={() => setShowHandles(true)}
+      onMouseLeave={() => setShowHandles(false)}
+    >
+      <Handle
+        type="source"
+        id={`p-left-${children}`}
+        position={Position.Left}
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "-25px",
+          transform: "translateY(-50%)",
+          width: 10, // keep default handle size
+          height: 10,
+          pointerEvents: "all",
+          zIndex: 1,
+          visibility: showHandles ? "visible" : "hidden",
+        }}
+        className="react-flow__handle"
+      />
+
+      {children}
+      <Handle
+        type="source"
+        id={`p-right-${children}`}
+        position={Position.Right}
+        style={{
+          position: "absolute",
+          top: "50%",
+          right: "-25px",
+          transform: "translateY(-50%)",
+          width: 10, // keep default handle size
+          height: 10,
+          pointerEvents: "all",
+          zIndex: 1,
+          visibility: showHandles ? "visible" : "hidden",
+        }}
+        className="react-flow__handle"
+      />
+    </div>
+  );
+};
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
@@ -62,9 +114,11 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </h6>
           ),
           p: ({ children }) => (
-            <p className="text-sm text-gray-700 leading-relaxed mb-2 last:mb-0">
-              {children}
-            </p>
+            <MarkdownItemWithHandles>
+              <p className="text-sm text-gray-700 leading-relaxed mb-2 last:mb-0">
+                {children}
+              </p>
+            </MarkdownItemWithHandles>
           ),
           ul: ({ children }) => (
             <ul className="text-sm text-gray-700 mb-2 ml-4 space-y-1 list-disc">
