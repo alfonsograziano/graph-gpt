@@ -19,6 +19,7 @@ export const ConversationPage: React.FC = () => {
     updateConversation,
     updateNodePosition,
     setActiveNodePath,
+    createNodeAtPosition,
   } = useConversationContext();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -112,6 +113,7 @@ export const ConversationPage: React.FC = () => {
             activeNodePath={activeNodePath}
             onNodeClick={handleNodeClick}
             onNodePositionUpdate={handleNodePositionUpdate}
+            createNodeAtPosition={createNodeAtPosition}
           />
         )}
       </div>

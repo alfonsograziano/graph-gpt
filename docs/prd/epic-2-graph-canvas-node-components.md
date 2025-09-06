@@ -133,3 +133,22 @@ so that I can reorganize my conversation graph layout and improve visual organiz
 8. Graph layout updates smoothly after node repositioning
 9. Node positions persist across page refreshes
 10. Drag and drop functionality is accessible and works with keyboard navigation
+
+## Story 2.9: Contextual Menu with Create New Node
+
+As a user,
+I want to right-click on the canvas to open a contextual menu with options to create new nodes,
+so that I can quickly add new conversation nodes at specific positions on the graph.
+
+### Acceptance Criteria
+
+1. Right-clicking on empty canvas space opens a contextual menu
+2. Contextual menu appears at the cursor position
+3. Menu contains "Create new node" option as the first item
+4. Clicking "Create new node" creates a new input node at the cursor position
+5. New node is properly positioned and becomes active
+6. Contextual menu closes after selecting an option or clicking elsewhere
+7. Menu has proper styling and visual hierarchy
+8. Right-clicking on existing nodes does not show the contextual menu
+9. Menu is accessible and works with keyboard navigation
+10. New node creation integrates with existing conversation state management

@@ -424,6 +424,7 @@ export const ConversationProvider: React.FC<ConversationProviderProps> = ({
     },
     deleteNode: conversationHook.deleteNode,
     updateNodePosition: conversationHook.updateNodePosition,
+    createNodeAtPosition: conversationHook.createNodeAtPosition,
 
     // UI Actions
     updateTitle: async (title: string) => {

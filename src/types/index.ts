@@ -218,6 +218,7 @@ export interface ConversationContextType {
     nodeId: string,
     position: { x: number; y: number }
   ) => Promise<void>;
+  createNodeAtPosition: (position: Position) => Promise<Node | null>;
 
   // UI Actions
   updateTitle: (title: string) => Promise<void>;

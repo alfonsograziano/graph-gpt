@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import ReactFlow, {
   Node as ReactFlowNodeType,
   Edge,
@@ -18,9 +18,10 @@ import ReactFlow, {
   NodeDragHandler,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Conversation, ReactFlowEdge, Node } from "@/types";
+import { Conversation, ReactFlowEdge, Node, Position } from "@/types";
 import { ConversationNode } from "./ConversationNode";
 import { ActiveEdge } from "./ActiveEdge";
+import { ContextMenu } from "./ContextMenu";
 import { isEdgeActive } from "@/utils/graphTraversal";
 
 interface GraphCanvasProps {
@@ -32,6 +33,7 @@ interface GraphCanvasProps {
     nodeId: string,
     position: { x: number; y: number }
   ) => void;
+  createNodeAtPosition?: (position: Position) => Promise<Node | null>;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -46,8 +48,18 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onNodeClick,
   onEdgeClick,
   onNodePositionUpdate,
+  createNodeAtPosition,
 }) => {
-  const { getNode } = useReactFlow();
+  const { getNode, screenToFlowPosition } = useReactFlow();
+
+  // Contextual menu state
+  const [contextMenu, setContextMenu] = useState<{
+    isVisible: boolean;
+    position: Position;
+  }>({
+    isVisible: false,
+    position: { x: 0, y: 0 },
+  });
   // Transform conversation data to React Flow format
   const initialNodes: ReactFlowNodeType[] = useMemo(() => {
     // If conversation has no nodes, we need to create a default input node
@@ -152,6 +164,58 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     [onNodePositionUpdate, conversation.nodes]
   );
 
+  // Handle right-click on canvas
+  const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+
+    setContextMenu({
+      isVisible: true,
+      position: {
+        x: event.clientX,
+        y: event.clientY,
+      },
+    });
+  }, []);
+
+  // Handle right-click on nodes (prevent contextual menu)
+  const onNodeContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    // Don't show contextual menu on nodes
+  }, []);
+
+  // Close contextual menu
+  const closeContextMenu = useCallback(() => {
+    setContextMenu({
+      isVisible: false,
+      position: { x: 0, y: 0 },
+    });
+  }, []);
+
+  // Handle create new node from contextual menu
+  const handleCreateNode = useCallback(async () => {
+    if (!createNodeAtPosition) return;
+
+    try {
+      // Convert screen coordinates to flow coordinates
+      const flowPosition = screenToFlowPosition({
+        x: contextMenu.position.x,
+        y: contextMenu.position.y,
+      });
+
+      await createNodeAtPosition(flowPosition);
+      closeContextMenu();
+    } catch (error) {
+      console.error("Failed to create node:", error);
+      closeContextMenu();
+    }
+  }, [
+    createNodeAtPosition,
+    contextMenu.position,
+    screenToFlowPosition,
+    closeContextMenu,
+  ]);
+
   // Custom node component wrapper to pass props
   const CustomNodeWrapper = useCallback(
     ({ data }: { data: { node: Node } }) => {
@@ -189,6 +253,8 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         onNodeClick={onNodeClickHandler}
         onEdgeClick={onEdgeClickHandler}
         onNodeDragStop={onNodeDragStop}
+        onPaneContextMenu={onPaneContextMenu}
+        onNodeContextMenu={onNodeContextMenu}
         nodeTypes={customNodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
@@ -225,6 +291,13 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
           color="#e5e7eb"
         />
       </ReactFlow>
+
+      <ContextMenu
+        isVisible={contextMenu.isVisible}
+        position={contextMenu.position}
+        onClose={closeContextMenu}
+        onCreateNode={handleCreateNode}
+      />
     </div>
   );
 };

@@ -42,6 +42,7 @@ interface UseConversationReturn {
     assistantResponse?: string;
     parentNodeId?: string;
   }) => Promise<Node | null>;
+  createNodeAtPosition: (position: Position) => Promise<Node | null>;
   addEdge: (edgeData: {
     sourceNodeId: string;
     targetNodeId: string;
@@ -283,6 +284,48 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   };
 
+  const createNodeAtPosition = async (
+    position: Position
+  ): Promise<Node | null> => {
+    if (!conversation) return null;
+
+    try {
+      const newNode: Node = {
+        ...createInputNode(conversation.id, position),
+        id: `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        type: "input",
+        userMessage: "",
+        assistantResponse: "",
+      };
+
+      const updatedConversation = {
+        ...conversation,
+        nodes: [...conversation.nodes, newNode],
+        metadata: {
+          ...conversation.metadata,
+          nodeCount: conversation.nodes.length + 1,
+          lastActiveNodeId: newNode.id,
+        },
+      };
+
+      await updateConversation(updatedConversation);
+
+      // Set the new node as active
+      setActiveNodePath(newNode.id);
+
+      return newNode;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to create node at position";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   const addEdge = async (edgeData: {
     sourceNodeId: string;
     targetNodeId: string;
@@ -471,6 +514,7 @@ export const useConversation = (id: string): UseConversationReturn => {
     createBranch,
     createDirectionalBranch,
     addNode,
+    createNodeAtPosition,
     addEdge,
     deleteNode,
     updateNodePosition,
