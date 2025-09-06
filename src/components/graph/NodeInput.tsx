@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/Button";
 
 interface NodeInputProps {
   onSubmit: (message: string) => void;
+  onInputChange?: (message: string) => void;
   placeholder?: string;
   disabled?: boolean;
 }
 
 export const NodeInput: React.FC<NodeInputProps> = ({
   onSubmit,
+  onInputChange,
   placeholder = "What do you have in mind?",
   disabled = false,
 }) => {
@@ -18,7 +20,11 @@ export const NodeInput: React.FC<NodeInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    const value = e.target.value;
+    setInputValue(value);
+    if (onInputChange) {
+      onInputChange(value);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

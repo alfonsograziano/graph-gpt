@@ -24,7 +24,13 @@ const NodeSchema = new Schema<Node>(
     id: { type: String, required: true },
     type: {
       type: String,
-      enum: ["input", "loading", "completed"] as NodeType[],
+      enum: [
+        "input",
+        "loading",
+        "generating",
+        "streaming",
+        "completed",
+      ] as NodeType[],
       required: true,
     },
     userMessage: { type: String, required: false, default: "" },

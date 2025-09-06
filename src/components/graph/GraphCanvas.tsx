@@ -29,12 +29,16 @@ interface GraphCanvasProps {
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
+  onMessageChange?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string, parentNodeHeight?: number) => void;
   onNodeDelete?: (nodeId: string) => void;
   onNodePositionUpdate?: (
     nodeId: string,
     position: { x: number; y: number }
   ) => void;
+  streamingNodeId?: string | null;
+  streamingContent?: string;
+  isStreaming?: boolean;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -49,9 +53,13 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onNodeClick,
   onEdgeClick,
   onMessageSubmit,
+  onMessageChange,
   onBranchCreate,
   onNodeDelete,
   onNodePositionUpdate,
+  streamingNodeId,
+  streamingContent,
+  isStreaming,
 }) => {
   const { getNode } = useReactFlow();
   // Transform conversation data to React Flow format
@@ -171,8 +179,12 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
           isActive={activeNodePath.includes(data.node.id)}
           onNodeClick={onNodeClick}
           onMessageSubmit={onMessageSubmit}
+          onMessageChange={onMessageChange}
           onBranchCreate={handleBranchCreate}
           onNodeDelete={onNodeDelete}
+          streamingContent={
+            streamingNodeId === data.node.id ? streamingContent : undefined
+          }
         />
       );
     },
@@ -183,6 +195,9 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       onNodeDelete,
       getNode,
       activeNodePath,
+      streamingNodeId,
+      streamingContent,
+      onMessageChange,
     ]
   );
 

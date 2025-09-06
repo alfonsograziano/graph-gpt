@@ -31,7 +31,12 @@ export interface ReactFlowEdge {
 }
 
 // Node types
-export type NodeType = "input" | "loading" | "completed";
+export type NodeType =
+  | "input"
+  | "loading"
+  | "generating"
+  | "streaming"
+  | "completed";
 
 // Edge types
 export type EdgeType = "auto" | "manual" | "markdown";
@@ -161,3 +166,6 @@ export interface ErrorResponse {
 
 // Re-export markdown types
 export * from "./markdown";
+
+// Re-export streaming types
+export * from "./streaming";
