@@ -174,11 +174,11 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         case "input":
           return `${baseClasses} ${inactiveClasses} bg-gray-100`;
         case "loading":
-          return `${baseClasses} ${inactiveClasses} bg-gray-200`;
+          return `${baseClasses} ${inactiveClasses} bg-gray-100`;
         case "generating":
-          return `${baseClasses} ${inactiveClasses} bg-gray-200`;
+          return `${baseClasses} ${inactiveClasses} bg-gray-100`;
         case "streaming":
-          return `${baseClasses} ${inactiveClasses} bg-gray-200`;
+          return `${baseClasses} ${inactiveClasses} bg-gray-100`;
         case "completed":
           return `${baseClasses} ${inactiveClasses} bg-gray-100`;
         default:

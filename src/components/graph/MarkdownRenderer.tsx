@@ -320,16 +320,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </MarkdownItemWithHandles>
           ),
           li: ({ children }) => (
-            <MarkdownItemWithHandles
-              elementType="li"
-              position={getElementPosition("li", children)}
-              onBranchCreate={onBranchCreate}
-              parentNodeId={parentNodeId}
-            >
-              <li className="text-sm text-gray-700 leading-relaxed">
-                {children}
-              </li>
-            </MarkdownItemWithHandles>
+            <li className="text-sm text-gray-700 leading-relaxed">
+              {children}
+            </li>
           ),
           code: ({ children, className }) => {
             const isInline = !className;
