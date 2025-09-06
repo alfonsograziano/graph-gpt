@@ -22,6 +22,8 @@ export interface ReactFlowEdge {
   id: string;
   source: string;
   target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
   type: string;
   data: {
     type: EdgeType;
@@ -68,6 +70,8 @@ export interface Edge {
   targetNodeId: string;
   type: EdgeType;
   createdAt: Date;
+  sourceHandle?: string;
+  targetHandle?: string;
   metadata?: EdgeMetadata;
 }
 

@@ -26,6 +26,33 @@ export function calculateNodePosition(
 }
 
 /**
+ * Calculate the position for a new node based on direction (left or right)
+ * @param parentNode - The parent node to position relative to
+ * @param direction - The direction to position the new node ('left' or 'right')
+ * @param parentNodeHeight - The actual height of the parent node (optional, falls back to NODE_HEIGHT)
+ * @returns Position for the new node
+ */
+export function calculateDirectionalNodePosition(
+  parentNode: Node,
+  direction: "left" | "right",
+  parentNodeHeight?: number
+): Position {
+  // Use actual node height if provided, otherwise fall back to default
+  const actualHeight = parentNodeHeight || NODE_HEIGHT;
+
+  // Horizontal offset for left/right positioning (100px as per requirements)
+  const HORIZONTAL_OFFSET = 100;
+
+  return {
+    x:
+      direction === "left"
+        ? parentNode.position.x - HORIZONTAL_OFFSET
+        : parentNode.position.x + HORIZONTAL_OFFSET,
+    y: parentNode.position.y + actualHeight / 2, // Center vertically with parent
+  };
+}
+
+/**
  * Generate a unique node ID
  * @returns A unique node ID string
  */

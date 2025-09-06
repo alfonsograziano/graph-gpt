@@ -27,6 +27,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     activeNodePath,
     updateConversation,
     createBranch,
+    createDirectionalBranch,
     deleteNode,
     updateNodePosition,
     setActiveNodePath,
@@ -175,6 +176,55 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
       await createBranch(nodeId, parentNodeHeight);
     } catch (error) {
       console.error("Failed to create branch:", error);
+    }
+  };
+
+  const handleMarkdownBranchCreate = async (
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    parentNodeId: string,
+    handleId: string
+  ) => {
+    console.log("[ConversationPage] handleMarkdownBranchCreate called with:", {
+      direction,
+      elementType,
+      content,
+      parentNodeId,
+      handleId,
+    });
+
+    if (!conversation) return;
+
+    try {
+      // Get the parent node to access its height
+      const parentNode = conversation.nodes.find(
+        (node) => node.id === parentNodeId
+      );
+      const parentNodeHeight = parentNode ? 100 : undefined; // Default height, could be improved
+
+      console.log(
+        "[ConversationPage] About to call createDirectionalBranch with:",
+        {
+          parentNodeId,
+          direction,
+          elementType,
+          content,
+          handleId,
+          parentNodeHeight,
+        }
+      );
+
+      await createDirectionalBranch(
+        parentNodeId,
+        direction,
+        elementType,
+        content,
+        handleId,
+        parentNodeHeight
+      );
+    } catch (error) {
+      console.error("Failed to create markdown branch:", error);
     }
   };
 
@@ -475,6 +525,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
             onMessageSubmit={handleMessageSubmit}
             onMessageChange={handleMessageChange}
             onBranchCreate={handleBranchCreate}
+            onMarkdownBranchCreate={handleMarkdownBranchCreate}
             onNodeDelete={handleNodeDelete}
             onNodePositionUpdate={handleNodePositionUpdate}
             streamingNodeId={streamingNodeId}

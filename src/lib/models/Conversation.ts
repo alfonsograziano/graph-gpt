@@ -55,6 +55,8 @@ const EdgeSchema = new Schema<Edge>(
       required: true,
     },
     createdAt: { type: Date, default: Date.now },
+    sourceHandle: { type: String, required: false },
+    targetHandle: { type: String, required: false },
     metadata: {
       markdownElementId: { type: String, required: false },
       contextSnippet: { type: String, required: false },

@@ -31,6 +31,13 @@ interface GraphCanvasProps {
   onMessageSubmit?: (message: string, nodeId: string) => void;
   onMessageChange?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string, parentNodeHeight?: number) => void;
+  onMarkdownBranchCreate?: (
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    parentNodeId: string,
+    handleId: string
+  ) => void;
   onNodeDelete?: (nodeId: string) => void;
   onNodePositionUpdate?: (
     nodeId: string,
@@ -55,6 +62,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onMessageSubmit,
   onMessageChange,
   onBranchCreate,
+  onMarkdownBranchCreate,
   onNodeDelete,
   onNodePositionUpdate,
   streamingNodeId,
@@ -82,18 +90,30 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   }, [conversation.nodes]);
 
   const initialEdges: ReactFlowEdge[] = useMemo(() => {
-    return conversation.edges.map((edge) => ({
-      id: edge.id,
-      source: edge.sourceNodeId,
-      target: edge.targetNodeId,
-      type: "activeEdge",
-      data: {
-        type: edge.type,
-        createdAt: edge.createdAt,
+    return conversation.edges.map((edge) => {
+      const sourceHandle = edge.sourceHandle;
+      console.log("Creating ReactFlow edge:", {
+        edgeId: edge.id,
+        source: edge.sourceNodeId,
+        target: edge.targetNodeId,
+        sourceHandle,
         metadata: edge.metadata,
-        isActive: isEdgeActive(edge.id, activeNodePath, conversation.edges),
-      },
-    }));
+      });
+
+      return {
+        id: edge.id,
+        source: edge.sourceNodeId,
+        target: edge.targetNodeId,
+        sourceHandle: sourceHandle,
+        type: "activeEdge",
+        data: {
+          type: edge.type,
+          createdAt: edge.createdAt,
+          metadata: edge.metadata,
+          isActive: isEdgeActive(edge.id, activeNodePath, conversation.edges),
+        },
+      };
+    });
   }, [conversation.edges, activeNodePath]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -181,6 +201,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
           onMessageSubmit={onMessageSubmit}
           onMessageChange={onMessageChange}
           onBranchCreate={handleBranchCreate}
+          onMarkdownBranchCreate={onMarkdownBranchCreate}
           onNodeDelete={onNodeDelete}
           streamingContent={
             streamingNodeId === data.node.id ? streamingContent : undefined
@@ -192,6 +213,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       onNodeClick,
       onMessageSubmit,
       onBranchCreate,
+      onMarkdownBranchCreate,
       onNodeDelete,
       getNode,
       activeNodePath,

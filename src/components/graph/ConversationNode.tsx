@@ -16,6 +16,13 @@ interface ConversationNodeProps {
   onMessageSubmit?: (message: string, nodeId: string) => void;
   onMessageChange?: (message: string, nodeId: string) => void;
   onBranchCreate?: (nodeId: string) => void;
+  onMarkdownBranchCreate?: (
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    parentNodeId: string,
+    handleId: string
+  ) => void;
   onNodeDelete?: (nodeId: string) => void;
   streamingContent?: string;
 }
@@ -27,6 +34,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   onMessageSubmit,
   onMessageChange,
   onBranchCreate,
+  onMarkdownBranchCreate,
   onNodeDelete,
   streamingContent,
 }) => {
@@ -73,6 +81,32 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     }
   };
 
+  const handleMarkdownBranchCreate = (
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    parentNodeId: string,
+    handleId: string
+  ) => {
+    console.log("[ConversationNode] handleMarkdownBranchCreate called with:", {
+      direction,
+      elementType,
+      content,
+      parentNodeId,
+      handleId,
+    });
+
+    if (onMarkdownBranchCreate) {
+      onMarkdownBranchCreate(
+        direction,
+        elementType,
+        content,
+        parentNodeId,
+        handleId
+      );
+    }
+  };
+
   const renderNodeContent = () => {
     switch (node.type) {
       case "input":
@@ -109,7 +143,9 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
           <NodeCompleted
             userMessage={node.userMessage || ""}
             assistantResponse={streamingContent || node.assistantResponse}
+            onMarkdownBranchCreate={handleMarkdownBranchCreate}
             isHovered={isHovered}
+            parentNodeId={node.id}
           />
         );
       case "completed":
@@ -118,7 +154,9 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
             userMessage={node.userMessage || ""}
             assistantResponse={node.assistantResponse}
             onBranchCreate={handleBranchCreate}
+            onMarkdownBranchCreate={handleMarkdownBranchCreate}
             isHovered={isHovered}
+            parentNodeId={node.id}
           />
         );
       default:
@@ -174,13 +212,6 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         className="w-3 h-3 bg-gray-400"
       />
       {renderNodeContent()}
-      {node.type === "completed" && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="w-3 h-3 bg-gray-400"
-        />
-      )}
 
       <DeleteButton
         onDelete={handleNodeDelete}

@@ -3,9 +3,12 @@ import { Conversation, Node, Edge, Position, EdgeMetadata } from "@/types";
 import { FrontendConversationService } from "@/services/frontendConversationService";
 import {
   calculateNodePosition,
+  calculateDirectionalNodePosition,
   createInputNode,
   createEdge,
 } from "@/utils/graphUtils";
+import { extractTextContent } from "@/utils/handleIdUtils";
+
 import {
   calculatePathToRoot,
   validatePath,
@@ -21,6 +24,14 @@ interface UseConversationReturn {
   updateConversation: (updates: Partial<Conversation>) => Promise<void>;
   createBranch: (
     parentNodeId: string,
+    parentNodeHeight?: number
+  ) => Promise<Node | null>;
+  createDirectionalBranch: (
+    parentNodeId: string,
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    handleId: string,
     parentNodeHeight?: number
   ) => Promise<Node | null>;
   addNode: (nodeData: {
@@ -120,6 +131,10 @@ export const useConversation = (id: string): UseConversationReturn => {
         ...createEdge(conversation.id, parentNodeId, newNode.id, "auto"),
         id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         createdAt: new Date(),
+        sourceHandle: `bottom-branch-${parentNodeId}`,
+        metadata: {
+          markdownElementId: `bottom-branch-${parentNodeId}`,
+        },
       };
 
       // Update conversation with new node and edge
@@ -141,6 +156,107 @@ export const useConversation = (id: string): UseConversationReturn => {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to create branch";
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const createDirectionalBranch = async (
+    parentNodeId: string,
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    handleId: string,
+    parentNodeHeight?: number
+  ): Promise<Node | null> => {
+    console.log("[createDirectionalBranch] Function called with parameters:", {
+      parentNodeId,
+      direction,
+      elementType,
+      content,
+      handleId,
+      parentNodeHeight,
+    });
+
+    if (!conversation) return null;
+
+    try {
+      // Find the parent node
+      const parentNode = conversation.nodes.find(
+        (node) => node.id === parentNodeId
+      );
+      if (!parentNode) {
+        throw new Error("Parent node not found");
+      }
+
+      // Calculate position for new node based on direction
+      const position = calculateDirectionalNodePosition(
+        parentNode,
+        direction,
+        parentNodeHeight
+      );
+
+      console.log("[createDirectionalBranch] position:", position);
+
+      const contextSnippet = extractTextContent(content);
+
+      console.log("[createDirectionalBranch] contextSnippet:", contextSnippet);
+      // Create the new input node
+      const newNode: Node = {
+        ...createInputNode(conversation.id, position, parentNodeId),
+        id: `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      console.log("[createDirectionalBranch] newNode:", newNode);
+
+      // Use the provided handle ID (now required)
+
+      // Create edge between parent and new node with markdown metadata
+      const newEdge: Edge = {
+        ...createEdge(conversation.id, parentNodeId, newNode.id, "markdown"),
+        id: `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date(),
+        sourceHandle: handleId,
+        metadata: {
+          markdownElementId: handleId,
+          contextSnippet: contextSnippet,
+        },
+      };
+
+      console.log("[createDirectionalBranch] finalHandleId:", handleId);
+      console.log(
+        "[createDirectionalBranch] newEdge.metadata.markdownElementId:",
+        newEdge.metadata?.markdownElementId
+      );
+
+      console.log(
+        "[createDirectionalBranch] newEdge:",
+        JSON.stringify(newEdge, null, 2)
+      );
+
+      // Update conversation with new node and edge
+      const updatedConversation = {
+        ...conversation,
+        nodes: [...conversation.nodes, newNode],
+        edges: [...conversation.edges, newEdge],
+        metadata: {
+          ...conversation.metadata,
+          nodeCount: conversation.nodes.length + 1,
+          lastActiveNodeId: newNode.id,
+        },
+      };
+
+      // Update backend
+      await updateConversation(updatedConversation);
+
+      return newNode;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to create directional branch";
       setError(errorMessage);
       throw err;
     }
@@ -376,6 +492,7 @@ export const useConversation = (id: string): UseConversationReturn => {
     refetch: fetchConversation,
     updateConversation,
     createBranch,
+    createDirectionalBranch,
     addNode,
     addEdge,
     deleteNode,
