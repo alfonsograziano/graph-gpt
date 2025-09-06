@@ -13,9 +13,14 @@ export const BranchButton: React.FC<BranchButtonProps> = ({
   disabled = false,
   isVisible = true,
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={`
         w-8 h-8 rounded-full border-2 border-gray-300 bg-white

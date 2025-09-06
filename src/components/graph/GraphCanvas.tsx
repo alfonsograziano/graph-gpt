@@ -20,9 +20,12 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import { Conversation, ReactFlowEdge, Node } from "@/types";
 import { ConversationNode } from "./ConversationNode";
+import { ActiveEdge } from "./ActiveEdge";
+import { isEdgeActive } from "@/utils/graphTraversal";
 
 interface GraphCanvasProps {
   conversation: Conversation;
+  activeNodePath: string[];
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
@@ -37,11 +40,12 @@ interface GraphCanvasProps {
 // Custom node types - will be defined inline with wrapper
 
 const edgeTypes: EdgeTypes = {
-  // Will be expanded in future stories
+  activeEdge: ActiveEdge,
 };
 
 const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   conversation,
+  activeNodePath,
   onNodeClick,
   onEdgeClick,
   onMessageSubmit,
@@ -74,14 +78,15 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       id: edge.id,
       source: edge.sourceNodeId,
       target: edge.targetNodeId,
-      type: "default",
+      type: "activeEdge",
       data: {
         type: edge.type,
         createdAt: edge.createdAt,
         metadata: edge.metadata,
+        isActive: isEdgeActive(edge.id, activeNodePath, conversation.edges),
       },
     }));
-  }, [conversation.edges]);
+  }, [conversation.edges, activeNodePath]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -127,12 +132,25 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
 
   const onNodeDragStop: NodeDragHandler = useCallback(
     (event, node) => {
-      // Update node position when drag stops
+      // Only update position if the node was actually dragged (position changed)
       if (onNodePositionUpdate) {
-        onNodePositionUpdate(node.id, node.position);
+        // Find the original node position from conversation data
+        const originalNode = conversation.nodes.find((n) => n.id === node.id);
+        if (originalNode) {
+          const originalPosition = originalNode.position;
+          const newPosition = node.position;
+
+          // Only update if position actually changed
+          if (
+            originalPosition.x !== newPosition.x ||
+            originalPosition.y !== newPosition.y
+          ) {
+            onNodePositionUpdate(node.id, node.position);
+          }
+        }
       }
     },
-    [onNodePositionUpdate]
+    [onNodePositionUpdate, conversation.nodes]
   );
 
   // Custom node component wrapper to pass props
@@ -150,6 +168,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       return (
         <ConversationNode
           node={data.node}
+          isActive={activeNodePath.includes(data.node.id)}
           onNodeClick={onNodeClick}
           onMessageSubmit={onMessageSubmit}
           onBranchCreate={handleBranchCreate}
@@ -157,7 +176,14 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         />
       );
     },
-    [onNodeClick, onMessageSubmit, onBranchCreate, onNodeDelete, getNode]
+    [
+      onNodeClick,
+      onMessageSubmit,
+      onBranchCreate,
+      onNodeDelete,
+      getNode,
+      activeNodePath,
+    ]
   );
 
   // Update node types with wrapper
