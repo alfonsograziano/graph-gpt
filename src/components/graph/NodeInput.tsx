@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 
 interface NodeInputProps {
   onSubmit: (message: string) => void;
   onInputChange?: (message: string) => void;
+  onNodeClick?: () => void;
+  isActive?: boolean;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -13,11 +15,20 @@ interface NodeInputProps {
 export const NodeInput: React.FC<NodeInputProps> = ({
   onSubmit,
   onInputChange,
+  onNodeClick,
+  isActive = false,
   placeholder = "What do you have in mind?",
   disabled = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the input when the node becomes active
+  useEffect(() => {
+    if (isActive && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isActive]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -42,9 +53,9 @@ export const NodeInput: React.FC<NodeInputProps> = ({
 
   const handleInputClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Focus the input when clicked
-    if (inputRef.current) {
-      inputRef.current.focus();
+    // Trigger node activation when input is clicked
+    if (onNodeClick) {
+      onNodeClick();
     }
   };
 

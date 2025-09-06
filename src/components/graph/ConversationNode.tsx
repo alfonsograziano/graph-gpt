@@ -107,6 +107,8 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
             <NodeInput
               onSubmit={handleMessageSubmitLocal}
               onInputChange={handleMessageChange}
+              onNodeClick={() => onNodeClick?.(node.id)}
+              isActive={isActive}
               placeholder="What do you have in mind?"
             />
           </div>
