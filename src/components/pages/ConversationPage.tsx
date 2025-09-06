@@ -6,7 +6,7 @@ import { GraphCanvas } from "@/components/graph/GraphCanvas";
 import { EditableTitle } from "@/components/ui/EditableTitle";
 import { Button } from "@/components/ui/Button";
 import { StreamingToggle } from "@/components/ui/StreamingToggle";
-import { useConversation } from "@/hooks/useConversation";
+import { useConversationContext } from "@/context";
 import { useLLMStream } from "@/hooks/useLLMStream";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Node, ChatRequest, StreamingChatRequest } from "@/types";
@@ -14,13 +14,7 @@ import { apiClient } from "@/services/apiClient";
 import { contextService } from "@/services/contextService";
 import { findContextSnippetForNode } from "@/utils/graphUtils";
 
-interface ConversationPageProps {
-  conversationId: string;
-}
-
-export const ConversationPage: React.FC<ConversationPageProps> = ({
-  conversationId,
-}) => {
+export const ConversationPage: React.FC = () => {
   const router = useRouter();
   const {
     conversation,
@@ -32,7 +26,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     deleteNode,
     updateNodePosition,
     setActiveNodePath,
-  } = useConversation(conversationId);
+  } = useConversationContext();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(conversation?.title || "");
   const [isSaving, setIsSaving] = useState(false);

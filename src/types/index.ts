@@ -174,3 +174,48 @@ export * from "./markdown";
 
 // Re-export streaming types
 export * from "./streaming";
+
+// Conversation Context Types
+export interface ConversationContextState {
+  conversation: Conversation | null;
+  isLoading: boolean;
+  error: string | null;
+  activeNodePath: string[];
+}
+
+export interface ConversationContextType {
+  // State
+  conversation: Conversation | null;
+  isLoading: boolean;
+  error: string | null;
+  activeNodePath: string[];
+
+  // Actions
+  loadConversation: (conversationId: string) => Promise<void>;
+  updateConversation: (updates: Partial<Conversation>) => Promise<void>;
+  setActiveNodePath: (nodeId: string | null) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  createBranch: (nodeId: string, parentNodeHeight?: number) => Promise<void>;
+  createDirectionalBranch: (
+    parentNodeId: string,
+    direction: "left" | "right",
+    elementType: string,
+    content: React.ReactNode,
+    handleId: string,
+    parentNodeHeight?: number,
+    handleYOffset?: number
+  ) => Promise<void>;
+  deleteNode: (nodeId: string) => Promise<void>;
+  updateNodePosition: (
+    nodeId: string,
+    position: { x: number; y: number }
+  ) => Promise<void>;
+}
+
+export type ConversationContextAction =
+  | { type: "SET_CONVERSATION"; payload: Conversation | null }
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
+  | { type: "SET_ACTIVE_NODE_PATH"; payload: string | null }
+  | { type: "UPDATE_CONVERSATION"; payload: Partial<Conversation> };

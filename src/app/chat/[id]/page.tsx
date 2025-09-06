@@ -1,4 +1,5 @@
 import { ConversationPage } from "@/components/pages/ConversationPage";
+import { ConversationProvider } from "@/context";
 
 export default async function ChatPage({
   params,
@@ -9,5 +10,9 @@ export default async function ChatPage({
   if (!id) {
     return <div>No conversation ID found</div>;
   }
-  return <ConversationPage conversationId={id as string} />;
+  return (
+    <ConversationProvider conversationId={id as string}>
+      <ConversationPage />
+    </ConversationProvider>
+  );
 }
