@@ -164,6 +164,14 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     [onNodePositionUpdate, conversation.nodes]
   );
 
+  // Close contextual menu
+  const closeContextMenu = useCallback(() => {
+    setContextMenu({
+      isVisible: false,
+      position: { x: 0, y: 0 },
+    });
+  }, []);
+
   // Handle right-click on canvas
   const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
@@ -177,19 +185,18 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
     });
   }, []);
 
+  // Handle left-click on canvas to close context menu
+  const onPaneClick = useCallback(() => {
+    if (contextMenu.isVisible) {
+      closeContextMenu();
+    }
+  }, [contextMenu.isVisible, closeContextMenu]);
+
   // Handle right-click on nodes (prevent contextual menu)
   const onNodeContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     // Don't show contextual menu on nodes
-  }, []);
-
-  // Close contextual menu
-  const closeContextMenu = useCallback(() => {
-    setContextMenu({
-      isVisible: false,
-      position: { x: 0, y: 0 },
-    });
   }, []);
 
   // Handle create new node from contextual menu
@@ -253,6 +260,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         onNodeClick={onNodeClickHandler}
         onEdgeClick={onEdgeClickHandler}
         onNodeDragStop={onNodeDragStop}
+        onPaneClick={onPaneClick}
         onPaneContextMenu={onPaneContextMenu}
         onNodeContextMenu={onNodeContextMenu}
         nodeTypes={customNodeTypes}

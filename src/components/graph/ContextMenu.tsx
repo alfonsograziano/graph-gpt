@@ -27,16 +27,34 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       }
     };
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
     if (isVisible) {
-      document.addEventListener("mousedown", handleClickOutside);
+      // Use a small delay to prevent immediate closure when the menu opens
+      const timeoutId = setTimeout(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleEscape);
+      }, 100);
+
       // Focus the first menu item when menu opens
       setTimeout(() => {
         focusedItemRef.current?.focus();
       }, 0);
+
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscape);
+      };
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [isVisible, onClose]);
 
