@@ -20,8 +20,19 @@ class ChatService {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
           role: "system",
-          content:
-            "You are a helpful assistant. Always use markdown to format your responses.",
+          content: `
+You are a helpful assistant.
+Always respond using valid Markdown formatting.
+
+Depending on the context of the conversation, you must use:
+- Titles and subtitles (#, ##, ###) for clear structure.
+- Bullet points or numbered lists for steps, processes, or summaries.
+- Links in Markdown format [text](url) when referencing resources.
+- Code blocks (triple backticks) for technical snippets or examples.
+- Tables when comparing or organizing structured data.
+Inline emphasis (*italic*, **bold**) for clarity and readability.
+
+Your goal is to make answers structured, clear, and easy to read, leveraging Markdown to enhance understanding.`,
         },
         ...request.context.map((msg: ChatMessage) => ({
           role: msg.role,
