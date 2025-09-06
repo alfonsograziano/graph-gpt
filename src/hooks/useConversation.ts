@@ -68,23 +68,26 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   }, [id]);
 
-  const updateConversation = async (updates: Partial<Conversation>) => {
-    if (!conversation) return;
+  const updateConversation = useCallback(
+    async (updates: Partial<Conversation>) => {
+      if (!conversation) return;
 
-    try {
-      const updatedConversation =
-        await FrontendConversationService.updateConversation(
-          conversation.id,
-          updates
-        );
-      setConversation(updatedConversation);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update conversation";
-      setError(errorMessage);
-      throw err; // Re-throw to allow component to handle the error
-    }
-  };
+      try {
+        const updatedConversation =
+          await FrontendConversationService.updateConversation(
+            conversation.id,
+            updates
+          );
+        setConversation(updatedConversation);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update conversation";
+        setError(errorMessage);
+        throw err; // Re-throw to allow component to handle the error
+      }
+    },
+    [conversation]
+  );
 
   const createBranch = async (
     parentNodeId: string,

@@ -129,12 +129,25 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
 
   const onNodeDragStop: NodeDragHandler = useCallback(
     (event, node) => {
-      // Update node position when drag stops
+      // Only update position if the node was actually dragged (position changed)
       if (onNodePositionUpdate) {
-        onNodePositionUpdate(node.id, node.position);
+        // Find the original node position from conversation data
+        const originalNode = conversation.nodes.find((n) => n.id === node.id);
+        if (originalNode) {
+          const originalPosition = originalNode.position;
+          const newPosition = node.position;
+
+          // Only update if position actually changed
+          if (
+            originalPosition.x !== newPosition.x ||
+            originalPosition.y !== newPosition.y
+          ) {
+            onNodePositionUpdate(node.id, node.position);
+          }
+        }
       }
     },
-    [onNodePositionUpdate]
+    [onNodePositionUpdate, conversation.nodes]
   );
 
   // Custom node component wrapper to pass props
