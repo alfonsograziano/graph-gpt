@@ -20,7 +20,8 @@ interface MarkdownItemWithHandlesProps {
     elementType: string,
     content: React.ReactNode,
     parentNodeId: string,
-    handleId: string
+    handleId: string,
+    handleYOffset?: number
   ) => void;
   parentNodeId?: string;
 }
@@ -30,29 +31,56 @@ export const MarkdownItemWithHandles: React.FC<
 > = ({ children, elementType, position, onBranchCreate, parentNodeId }) => {
   const [showHandles, setShowHandles] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const elementRef = React.useRef<HTMLDivElement>(null);
 
   const handleIds = generateBranchHandleIds(elementType, children, position);
 
+  const getHandleYOffset = (): number | undefined => {
+    if (!elementRef.current || !parentNodeId) return undefined;
+
+    // Find the parent node element to get its position
+    const parentNodeElement = document.querySelector(
+      `[data-id="${parentNodeId}"]`
+    );
+    if (!parentNodeElement) return undefined;
+
+    // Calculate the offset relative to the parent node
+    const elementRect = elementRef.current.getBoundingClientRect();
+    const parentRect = parentNodeElement.getBoundingClientRect();
+
+    // Calculate the offset from the top of the parent node to the center of this element
+    const elementCenterY = elementRect.top + elementRect.height / 2;
+    const parentTopY = parentRect.top;
+
+    const offset = elementCenterY - parentTopY;
+
+    return offset;
+  };
+
   const handleLeftBranch = () => {
     if (onBranchCreate && parentNodeId) {
+      const handleYOffset = getHandleYOffset();
       onBranchCreate(
         "left",
         elementType,
         children,
         parentNodeId,
-        handleIds.leftId
+        handleIds.leftId,
+        handleYOffset
       );
     }
   };
 
   const handleRightBranch = () => {
     if (onBranchCreate && parentNodeId) {
+      const handleYOffset = getHandleYOffset();
       onBranchCreate(
         "right",
         elementType,
         children,
         parentNodeId,
-        handleIds.rightId
+        handleIds.rightId,
+        handleYOffset
       );
     }
   };
@@ -74,6 +102,7 @@ export const MarkdownItemWithHandles: React.FC<
 
   return (
     <div
+      ref={elementRef}
       className="relative inline-block w-full"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

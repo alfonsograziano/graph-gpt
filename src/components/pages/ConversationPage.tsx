@@ -185,7 +185,8 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     elementType: string,
     content: React.ReactNode,
     parentNodeId: string,
-    handleId: string
+    handleId: string,
+    handleYOffset?: number
   ) => {
     if (!conversation) return;
 
@@ -202,7 +203,8 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
         elementType,
         content,
         handleId,
-        parentNodeHeight
+        parentNodeHeight,
+        handleYOffset
       );
     } catch (error) {
       console.error("Failed to create markdown branch:", error);

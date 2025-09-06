@@ -9,7 +9,8 @@ export interface MarkdownRendererProps {
     elementType: string,
     content: React.ReactNode,
     parentNodeId: string,
-    handleId: string
+    handleId: string,
+    handleYOffset?: number
   ) => void;
   parentNodeId?: string;
 }

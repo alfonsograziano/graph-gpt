@@ -32,7 +32,8 @@ interface UseConversationReturn {
     elementType: string,
     content: React.ReactNode,
     handleId: string,
-    parentNodeHeight?: number
+    parentNodeHeight?: number,
+    handleYOffset?: number
   ) => Promise<Node | null>;
   addNode: (nodeData: {
     type: "input" | "loading" | "completed";
@@ -167,7 +168,8 @@ export const useConversation = (id: string): UseConversationReturn => {
     elementType: string,
     content: React.ReactNode,
     handleId: string,
-    parentNodeHeight?: number
+    parentNodeHeight?: number,
+    handleYOffset?: number
   ): Promise<Node | null> => {
     if (!conversation) return null;
 
@@ -184,7 +186,8 @@ export const useConversation = (id: string): UseConversationReturn => {
       const position = calculateDirectionalNodePosition(
         parentNode,
         direction,
-        parentNodeHeight
+        parentNodeHeight,
+        handleYOffset
       );
       const contextSnippet = extractTextContent(content);
 

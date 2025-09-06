@@ -15,7 +15,8 @@ interface NodeCompletedProps {
     elementType: string,
     content: React.ReactNode,
     parentNodeId: string,
-    handleId: string
+    handleId: string,
+    handleYOffset?: number
   ) => void;
   isHovered?: boolean;
   parentNodeId?: string;

@@ -21,7 +21,8 @@ interface ConversationNodeProps {
     elementType: string,
     content: React.ReactNode,
     parentNodeId: string,
-    handleId: string
+    handleId: string,
+    handleYOffset?: number
   ) => void;
   onNodeDelete?: (nodeId: string) => void;
   streamingContent?: string;
@@ -86,7 +87,8 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     elementType: string,
     content: React.ReactNode,
     parentNodeId: string,
-    handleId: string
+    handleId: string,
+    handleYOffset?: number
   ) => {
     if (onMarkdownBranchCreate) {
       onMarkdownBranchCreate(
@@ -94,7 +96,8 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         elementType,
         content,
         parentNodeId,
-        handleId
+        handleId,
+        handleYOffset
       );
     }
   };

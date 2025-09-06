@@ -30,25 +30,31 @@ export function calculateNodePosition(
  * @param parentNode - The parent node to position relative to
  * @param direction - The direction to position the new node ('left' or 'right')
  * @param parentNodeHeight - The actual height of the parent node (optional, falls back to NODE_HEIGHT)
+ * @param handleYOffset - The vertical offset of the handle from the top of the parent node (optional, defaults to center)
  * @returns Position for the new node
  */
 export function calculateDirectionalNodePosition(
   parentNode: Node,
   direction: "left" | "right",
-  parentNodeHeight?: number
+  parentNodeHeight?: number,
+  handleYOffset?: number
 ): Position {
   // Use actual node height if provided, otherwise fall back to default
   const actualHeight = parentNodeHeight || NODE_HEIGHT;
 
-  // Horizontal offset for left/right positioning (100px as per requirements)
-  const HORIZONTAL_OFFSET = 100;
+  // Horizontal offset for left/right positioning (700px as per requirements)
+  const HORIZONTAL_OFFSET = 700;
+
+  // Use handle offset if provided, otherwise center with parent
+  const verticalOffset =
+    handleYOffset !== undefined ? handleYOffset : actualHeight / 2;
 
   return {
     x:
       direction === "left"
         ? parentNode.position.x - HORIZONTAL_OFFSET
         : parentNode.position.x + HORIZONTAL_OFFSET,
-    y: parentNode.position.y + actualHeight / 2, // Center vertically with parent
+    y: parentNode.position.y + verticalOffset, // Position near the handle that generated the node
   };
 }
 
