@@ -92,13 +92,6 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   const initialEdges: ReactFlowEdge[] = useMemo(() => {
     return conversation.edges.map((edge) => {
       const sourceHandle = edge.sourceHandle;
-      console.log("Creating ReactFlow edge:", {
-        edgeId: edge.id,
-        source: edge.sourceNodeId,
-        target: edge.targetNodeId,
-        sourceHandle,
-        metadata: edge.metadata,
-      });
 
       return {
         id: edge.id,

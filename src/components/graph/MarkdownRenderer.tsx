@@ -35,11 +35,6 @@ export const MarkdownItemWithHandles: React.FC<
 
   const handleLeftBranch = () => {
     if (onBranchCreate && parentNodeId) {
-      console.log("Left branch clicked:", {
-        elementType,
-        handleId: handleIds.leftId,
-        parentNodeId,
-      });
       onBranchCreate(
         "left",
         elementType,
@@ -52,11 +47,6 @@ export const MarkdownItemWithHandles: React.FC<
 
   const handleRightBranch = () => {
     if (onBranchCreate && parentNodeId) {
-      console.log("Right branch clicked:", {
-        elementType,
-        handleId: handleIds.rightId,
-        parentNodeId,
-      });
       onBranchCreate(
         "right",
         elementType,
@@ -131,12 +121,7 @@ export const MarkdownItemWithHandles: React.FC<
           border: "none",
         }}
         className="react-flow__handle"
-        onConnect={(params) => {
-          console.log("Left handle connected:", {
-            handleId: handleIds.leftId,
-            params,
-          });
-        }}
+        onConnect={(params) => {}}
       />
 
       {children}
@@ -159,12 +144,7 @@ export const MarkdownItemWithHandles: React.FC<
           border: "none",
         }}
         className="react-flow__handle"
-        onConnect={(params) => {
-          console.log("Right handle connected:", {
-            handleId: handleIds.rightId,
-            params,
-          });
-        }}
+        onConnect={(params) => {}}
       />
     </div>
   );

@@ -169,15 +169,6 @@ export const useConversation = (id: string): UseConversationReturn => {
     handleId: string,
     parentNodeHeight?: number
   ): Promise<Node | null> => {
-    console.log("[createDirectionalBranch] Function called with parameters:", {
-      parentNodeId,
-      direction,
-      elementType,
-      content,
-      handleId,
-      parentNodeHeight,
-    });
-
     if (!conversation) return null;
 
     try {
@@ -195,12 +186,8 @@ export const useConversation = (id: string): UseConversationReturn => {
         direction,
         parentNodeHeight
       );
-
-      console.log("[createDirectionalBranch] position:", position);
-
       const contextSnippet = extractTextContent(content);
 
-      console.log("[createDirectionalBranch] contextSnippet:", contextSnippet);
       // Create the new input node
       const newNode: Node = {
         ...createInputNode(conversation.id, position, parentNodeId),
@@ -208,8 +195,6 @@ export const useConversation = (id: string): UseConversationReturn => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
-      console.log("[createDirectionalBranch] newNode:", newNode);
 
       // Use the provided handle ID (now required)
 
@@ -224,17 +209,6 @@ export const useConversation = (id: string): UseConversationReturn => {
           contextSnippet: contextSnippet,
         },
       };
-
-      console.log("[createDirectionalBranch] finalHandleId:", handleId);
-      console.log(
-        "[createDirectionalBranch] newEdge.metadata.markdownElementId:",
-        newEdge.metadata?.markdownElementId
-      );
-
-      console.log(
-        "[createDirectionalBranch] newEdge:",
-        JSON.stringify(newEdge, null, 2)
-      );
 
       // Update conversation with new node and edge
       const updatedConversation = {

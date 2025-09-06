@@ -88,14 +88,6 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     parentNodeId: string,
     handleId: string
   ) => {
-    console.log("[ConversationNode] handleMarkdownBranchCreate called with:", {
-      direction,
-      elementType,
-      content,
-      parentNodeId,
-      handleId,
-    });
-
     if (onMarkdownBranchCreate) {
       onMarkdownBranchCreate(
         direction,

@@ -186,14 +186,6 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     parentNodeId: string,
     handleId: string
   ) => {
-    console.log("[ConversationPage] handleMarkdownBranchCreate called with:", {
-      direction,
-      elementType,
-      content,
-      parentNodeId,
-      handleId,
-    });
-
     if (!conversation) return;
 
     try {
@@ -202,18 +194,6 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
         (node) => node.id === parentNodeId
       );
       const parentNodeHeight = parentNode ? 100 : undefined; // Default height, could be improved
-
-      console.log(
-        "[ConversationPage] About to call createDirectionalBranch with:",
-        {
-          parentNodeId,
-          direction,
-          elementType,
-          content,
-          handleId,
-          parentNodeHeight,
-        }
-      );
 
       await createDirectionalBranch(
         parentNodeId,
