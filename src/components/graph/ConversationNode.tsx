@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Handle, Position } from "reactflow";
 import { Node } from "@/types";
+import { useConversationContext } from "@/context";
 import { NodeInput } from "./NodeInput";
 import { NodeLoading } from "./NodeLoading";
 import { NodeCompleted } from "./NodeCompleted";
@@ -13,33 +14,23 @@ interface ConversationNodeProps {
   node: Node;
   isActive?: boolean;
   onNodeClick?: (nodeId: string) => void;
-  onMessageSubmit?: (message: string, nodeId: string) => void;
-  onMessageChange?: (message: string, nodeId: string) => void;
-  onBranchCreate?: (nodeId: string) => void;
-  onMarkdownBranchCreate?: (
-    direction: "left" | "right",
-    elementType: string,
-    content: React.ReactNode,
-    parentNodeId: string,
-    handleId: string,
-    handleYOffset?: number
-  ) => void;
-  onNodeDelete?: (nodeId: string) => void;
-  streamingContent?: string;
+  nodeHeight?: number;
 }
 
 export const ConversationNode: React.FC<ConversationNodeProps> = ({
   node,
   isActive: propIsActive,
   onNodeClick,
-  onMessageSubmit,
-  onMessageChange,
-  onBranchCreate,
-  onMarkdownBranchCreate,
-  onNodeDelete,
-  streamingContent,
+  nodeHeight,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const {
+    handleMessageSubmit,
+    createBranch,
+    createDirectionalBranch,
+    deleteNode,
+    streamingContent,
+  } = useConversationContext();
 
   // Use the isActive prop directly, defaulting to false if undefined
   const isActive = propIsActive ?? false;
@@ -58,49 +49,47 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
     }
   };
 
-  const handleMessageSubmit = (message: string) => {
-    if (onMessageSubmit) {
-      onMessageSubmit(message, node.id);
-    }
-  };
+  const handleMessageSubmitLocal = useCallback(
+    (message: string) => {
+      handleMessageSubmit(message, node.id);
+    },
+    [handleMessageSubmit, node.id]
+  );
 
-  const handleMessageChange = (message: string) => {
-    if (onMessageChange) {
-      onMessageChange(message, node.id);
-    }
-  };
+  const handleMessageChange = useCallback(() => {
+    // No-op: We don't need to update the conversation on every keystroke
+    // The userMessage will be set when the form is submitted
+  }, []);
 
-  const handleBranchCreate = () => {
-    if (onBranchCreate) {
-      onBranchCreate(node.id);
-    }
-  };
+  const handleBranchCreate = useCallback(() => {
+    createBranch(node.id, nodeHeight);
+  }, [createBranch, node.id, nodeHeight]);
 
-  const handleNodeDelete = () => {
-    if (onNodeDelete) {
-      onNodeDelete(node.id);
-    }
-  };
+  const handleNodeDelete = useCallback(() => {
+    deleteNode(node.id);
+  }, [deleteNode, node.id]);
 
-  const handleMarkdownBranchCreate = (
-    direction: "left" | "right",
-    elementType: string,
-    content: React.ReactNode,
-    parentNodeId: string,
-    handleId: string,
-    handleYOffset?: number
-  ) => {
-    if (onMarkdownBranchCreate) {
-      onMarkdownBranchCreate(
+  const handleMarkdownBranchCreate = useCallback(
+    (
+      direction: "left" | "right",
+      elementType: string,
+      content: React.ReactNode,
+      parentNodeId: string,
+      handleId: string,
+      handleYOffset?: number
+    ) => {
+      createDirectionalBranch(
+        parentNodeId,
         direction,
         elementType,
         content,
-        parentNodeId,
         handleId,
+        undefined, // parentNodeHeight
         handleYOffset
       );
-    }
-  };
+    },
+    [createDirectionalBranch]
+  );
 
   const renderNodeContent = () => {
     switch (node.type) {
@@ -108,7 +97,7 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
         return (
           <div className="p-4 w-[600px] transition-all duration-300 ease-in-out">
             <NodeInput
-              onSubmit={handleMessageSubmit}
+              onSubmit={handleMessageSubmitLocal}
               onInputChange={handleMessageChange}
               placeholder="What do you have in mind?"
             />

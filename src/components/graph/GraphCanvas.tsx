@@ -28,24 +28,10 @@ interface GraphCanvasProps {
   activeNodePath: string[];
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
-  onMessageSubmit?: (message: string, nodeId: string) => void;
-  onMessageChange?: (message: string, nodeId: string) => void;
-  onBranchCreate?: (nodeId: string, parentNodeHeight?: number) => void;
-  onMarkdownBranchCreate?: (
-    direction: "left" | "right",
-    elementType: string,
-    content: React.ReactNode,
-    parentNodeId: string,
-    handleId: string
-  ) => void;
-  onNodeDelete?: (nodeId: string) => void;
   onNodePositionUpdate?: (
     nodeId: string,
     position: { x: number; y: number }
   ) => void;
-  streamingNodeId?: string | null;
-  streamingContent?: string;
-  isStreaming?: boolean;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -59,15 +45,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   activeNodePath,
   onNodeClick,
   onEdgeClick,
-  onMessageSubmit,
-  onMessageChange,
-  onBranchCreate,
-  onMarkdownBranchCreate,
-  onNodeDelete,
   onNodePositionUpdate,
-  streamingNodeId,
-  streamingContent,
-  isStreaming,
 }) => {
   const { getNode } = useReactFlow();
   // Transform conversation data to React Flow format
@@ -177,43 +155,20 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   // Custom node component wrapper to pass props
   const CustomNodeWrapper = useCallback(
     ({ data }: { data: { node: Node } }) => {
-      const handleBranchCreate = (nodeId: string) => {
-        // Get the React Flow node to access its dimensions
-        const reactFlowNode = getNode(nodeId);
-        const nodeHeight = reactFlowNode?.height ?? undefined;
-
-        // Call the original onBranchCreate with the height
-        onBranchCreate?.(nodeId, nodeHeight);
-      };
+      // Get the React Flow node to access its dimensions
+      const reactFlowNode = getNode(data.node.id);
+      const nodeHeight = reactFlowNode?.height ?? undefined;
 
       return (
         <ConversationNode
           node={data.node}
           isActive={activeNodePath.includes(data.node.id)}
           onNodeClick={onNodeClick}
-          onMessageSubmit={onMessageSubmit}
-          onMessageChange={onMessageChange}
-          onBranchCreate={handleBranchCreate}
-          onMarkdownBranchCreate={onMarkdownBranchCreate}
-          onNodeDelete={onNodeDelete}
-          streamingContent={
-            streamingNodeId === data.node.id ? streamingContent : undefined
-          }
+          nodeHeight={nodeHeight}
         />
       );
     },
-    [
-      onNodeClick,
-      onMessageSubmit,
-      onBranchCreate,
-      onMarkdownBranchCreate,
-      onNodeDelete,
-      getNode,
-      activeNodePath,
-      streamingNodeId,
-      streamingContent,
-      onMessageChange,
-    ]
+    [onNodeClick, activeNodePath, getNode]
   );
 
   // Update node types with wrapper

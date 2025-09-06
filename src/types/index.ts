@@ -191,6 +191,11 @@ export interface ConversationContextType {
   error: string | null;
   activeNodePath: string[];
   streamingEnabled: boolean;
+  isSubmittingMessage: boolean;
+  streamingNodeId: string | null;
+  streamingContent: string;
+  isStreaming: boolean;
+  isGenerating: boolean;
 
   // Actions
   loadConversation: (conversationId: string) => Promise<void>;
@@ -217,6 +222,7 @@ export interface ConversationContextType {
   // UI Actions
   updateTitle: (title: string) => Promise<void>;
   setStreamingEnabled: (enabled: boolean) => void;
+  handleMessageSubmit: (message: string, nodeId: string) => Promise<void>;
 }
 
 export type ConversationContextAction =
