@@ -1,71 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Graph GPT
 
-## Getting Started
+A graph-based interface for LLM interactions that mirrors human thinking patterns. Instead of linear chat conversations, Graph GPT allows you to explore multiple conversation paths simultaneously, creating a visual knowledge graph of your AI interactions.
+
+## 🌟 Key Features
+
+- **Non-linear Conversations**: Create multiple conversation branches from any point in your interaction
+- **Visual Graph Interface**: Intuitive node-based conversation management using React Flow
+- **Real-time Streaming**: Live markdown rendering as the AI responds
+- **Contextual Branching**: Create new nodes from specific parts of AI responses
+- **Conversation Persistence**: Save and manage multiple conversation graphs
+- **Interactive Node Management**: Click to activate conversation paths, drag to reposition nodes
+- **Smart Context**: Automatically includes relevant conversation history when branching
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ 
-- Docker and Docker Compose
-- MongoDB (via Docker or local installation)
+- Node.js v20+
+- MongoDB (local with Docker, or cloud instance)
+- OpenAI API key
 
-### Environment Setup
+### Installation
 
-Create a `.env.local` file in the root directory with the following variables:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/graph-gpt.git
+   cd graph-gpt
+   ```
 
-```bash
-# MongoDB Configuration
-MONGODB_URI=mongodb://admin:password@localhost:27017/graph_gpt?authSource=admin
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# OpenAI Configuration (if needed)
-# OPENAI_API_KEY=your_openai_api_key_here
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Add your configuration:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   MONGODB_URI=mongodb://localhost:27017/graph-gpt
+   ```
+
+4. **Start MongoDB** (if running locally with Docker)
+   ```bash
+   npm run start:mongodb
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🎯 How It Works
+
+### Traditional Chat vs Graph GPT
+
+**Traditional Chat**: Linear conversation flow
+```
+User → AI → User → AI → User → AI
 ```
 
-### Starting MongoDB
-
-To start MongoDB using Docker Compose:
-
-```bash
-npm run start:mongodb
+**Graph GPT**: Non-linear, explorative flow
+```
+User → AI → [Branch A: User → AI] → [Branch B: User → AI]
+         ↘ [Branch C: User → AI] 
 ```
 
-This will start MongoDB on port 27017 with the following default credentials:
-- Username: `admin`
-- Password: `password`
-- Database: `graph_gpt`
+### Core Concepts
 
-You can also access MongoDB Express (web interface) at [http://localhost:8081](http://localhost:8081) with credentials `admin/admin`.
+1. **Nodes**: Each conversation point becomes a visual node
+2. **Branches**: Create new conversation paths from any node
+3. **Context**: Active conversation path provides context to the AI
+4. **Visualization**: See your entire conversation as an interactive graph
 
-### Development Server
+## 🛠️ Technology Stack
 
-First, run the development server:
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **UI Library**: Tailwind CSS, Lucide React icons
+- **Graph Visualization**: React Flow
+- **Backend**: Next.js API routes
+- **Database**: MongoDB with Mongoose
+- **AI Integration**: OpenAI API with streaming
+- **Testing**: Jest, Vitest, Playwright
+- **Development**: Storybook, ESLint
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🎨 User Interface
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Homepage
+- View all saved conversations
+- Create new conversations
+- Delete existing conversations
+- Responsive grid layout
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Conversation Canvas
+- Interactive graph visualization
+- Editable conversation titles
+- Node creation and management
+- Real-time streaming responses
+- Context-aware branching
+## 🤝 Contributing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+We welcome contributions! Please feel free to open a PR or an issue to request features :D 
 
-## Learn More
+## 🙏 Acknowledgments
 
-To learn more about Next.js, take a look at the following resources:
+This project was inspired by and built using:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **[BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD)** - Breakthrough Method for Agile AI Driven Development that provided the development methodology and framework
+- **[Maxly.chat](https://www.maxly.chat/)** - The original inspiration for the graph-based conversation interface concept
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
