@@ -2,6 +2,14 @@
 
 A graph-based interface for LLM interactions that mirrors human thinking patterns. Instead of linear chat conversations, Graph GPT allows you to explore multiple conversation paths simultaneously, creating a visual knowledge graph of your AI interactions.
 
+![Graph GPT Demo](./public/images/demo.png)
+
+## 📹 Demo Video
+
+[![Graph GPT Demo Video](https://img.youtube.com/vi/AGMuGlKxO3w/maxresdefault.jpg)](https://www.youtube.com/watch?v=AGMuGlKxO3w)
+
+*Click the image above to watch the full demo video*
+
 ## 🌟 Key Features
 
 - **Non-linear Conversations**: Create multiple conversation branches from any point in your interaction
