@@ -29,7 +29,8 @@ interface MarkdownItemWithHandlesProps {
 export const MarkdownItemWithHandles: React.FC<
   MarkdownItemWithHandlesProps
 > = ({ children, elementType, position, onBranchCreate, parentNodeId }) => {
-  const [showHandles, setShowHandles] = useState(false);
+  const [showLeftHandle, setShowLeftHandle] = useState(false);
+  const [showRightHandle, setShowRightHandle] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
   const elementRef = React.useRef<HTMLDivElement>(null);
 
@@ -85,17 +86,32 @@ export const MarkdownItemWithHandles: React.FC<
     }
   };
 
-  const handleMouseEnter = () => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!elementRef.current) return;
+
     if (hoverTimeout) {
       clearTimeout(hoverTimeout);
       setHoverTimeout(null);
     }
-    setShowHandles(true);
+
+    const rect = elementRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const elementWidth = rect.width;
+    const isLeftHalf = mouseX < elementWidth / 2;
+
+    if (isLeftHalf) {
+      setShowLeftHandle(true);
+      setShowRightHandle(false);
+    } else {
+      setShowLeftHandle(false);
+      setShowRightHandle(true);
+    }
   };
 
   const handleMouseLeave = () => {
     const timeout = setTimeout(() => {
-      setShowHandles(false);
+      setShowLeftHandle(false);
+      setShowRightHandle(false);
     }, 200); // 200ms delay before hiding
     setHoverTimeout(timeout);
   };
@@ -104,31 +120,29 @@ export const MarkdownItemWithHandles: React.FC<
     <div
       ref={elementRef}
       className="relative inline-block w-full"
-      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
       {/* Left Branch Button */}
       <div
         className="absolute top-1/2 -left-12 transform -translate-y-1/2 z-10 p-2 -m-2"
         style={{
-          visibility: showHandles ? "visible" : "hidden",
+          visibility: showLeftHandle ? "visible" : "hidden",
         }}
-        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <BranchButton onClick={handleLeftBranch} isVisible={showHandles} />
+        <BranchButton onClick={handleLeftBranch} isVisible={showLeftHandle} />
       </div>
 
       {/* Right Branch Button */}
       <div
         className="absolute top-1/2 -right-12 transform -translate-y-1/2 z-10 p-2 -m-2"
         style={{
-          visibility: showHandles ? "visible" : "hidden",
+          visibility: showRightHandle ? "visible" : "hidden",
         }}
-        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <BranchButton onClick={handleRightBranch} isVisible={showHandles} />
+        <BranchButton onClick={handleRightBranch} isVisible={showRightHandle} />
       </div>
 
       {/* React Flow Handles for connections - invisible but functional */}
@@ -150,7 +164,7 @@ export const MarkdownItemWithHandles: React.FC<
           border: "none",
         }}
         className="react-flow__handle"
-        onConnect={(params) => {}}
+        onConnect={() => {}}
       />
 
       {children}
@@ -173,7 +187,7 @@ export const MarkdownItemWithHandles: React.FC<
           border: "none",
         }}
         className="react-flow__handle"
-        onConnect={(params) => {}}
+        onConnect={() => {}}
       />
     </div>
   );
