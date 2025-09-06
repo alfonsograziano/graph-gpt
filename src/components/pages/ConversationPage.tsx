@@ -12,6 +12,7 @@ import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { Node, ChatRequest, StreamingChatRequest } from "@/types";
 import { apiClient } from "@/services/apiClient";
 import { contextService } from "@/services/contextService";
+import { findContextSnippetForNode } from "@/utils/graphUtils";
 
 interface ConversationPageProps {
   conversationId: string;
@@ -252,6 +253,12 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
         nodeId
       );
 
+      // Check for context snippet from incoming edges
+      const referenceContextSnippet = findContextSnippetForNode(
+        conversation,
+        nodeId
+      );
+
       if (streamingEnabled) {
         // Handle streaming request
         setStreamingNodeId(nodeId);
@@ -288,6 +295,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
           nodeId,
           conversationId: conversation.id,
           streaming: true,
+          referenceContextSnippet,
         };
 
         // Reset the streaming state flag
@@ -324,6 +332,7 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
           context,
           nodeId,
           conversationId: conversation.id,
+          referenceContextSnippet,
         };
 
         // Send request to chat API

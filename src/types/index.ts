@@ -125,6 +125,7 @@ export interface ChatRequest {
   context: ChatMessage[];
   nodeId: string;
   conversationId: string;
+  referenceContextSnippet?: string;
 }
 
 export interface ChatResponse {

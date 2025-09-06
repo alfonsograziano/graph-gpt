@@ -21,6 +21,19 @@ class ChatService {
     });
   }
 
+  /**
+   * Build the user message with optional context snippet
+   */
+  private buildUserMessage(
+    message: string,
+    referenceContextSnippet?: string
+  ): string {
+    if (referenceContextSnippet) {
+      return `The current user request is related to this context: ${referenceContextSnippet} - user request: ${message}`;
+    }
+    return message;
+  }
+
   async sendMessage(request: ChatRequest): Promise<ChatResponse> {
     try {
       // Prepare messages for OpenAI API
@@ -47,7 +60,10 @@ Your goal is to make answers structured, clear, and easy to read, leveraging Mar
         })),
         {
           role: "user",
-          content: request.message,
+          content: this.buildUserMessage(
+            request.message,
+            request.referenceContextSnippet
+          ),
         },
       ];
 
@@ -132,7 +148,10 @@ Your goal is to make answers structured, clear, and easy to read, leveraging Mar
         })),
         {
           role: "user",
-          content: request.message,
+          content: this.buildUserMessage(
+            request.message,
+            request.referenceContextSnippet
+          ),
         },
       ];
 
@@ -144,52 +163,55 @@ Your goal is to make answers structured, clear, and easy to read, leveraging Mar
       });
 
       let chunkIndex = 0;
-      let fullContent = "";
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || "";
 
         if (content) {
-          fullContent += content;
-
           // Send chunk to callback
-          onChunk({
-            content,
-            isComplete: false,
-            chunkIndex,
-            timestamp: new Date(),
-          });
-
-          chunkIndex++;
+          try {
+            onChunk({
+              content,
+              isComplete: false,
+              chunkIndex,
+              timestamp: new Date(),
+            });
+            chunkIndex++;
+          } catch (error) {
+            // If callback fails (e.g., controller closed), stop processing
+            console.log("Streaming callback failed, stopping:", error);
+            break;
+          }
         }
       }
 
       // Send final completion chunk
-      onChunk({
-        content: "",
-        isComplete: true,
-        chunkIndex,
-        timestamp: new Date(),
-      });
-    } catch (error) {
-      if (
-        error &&
-        typeof error === "object" &&
-        "status" in error &&
-        "message" in error &&
-        typeof (error as { message?: unknown }).message === "string"
-      ) {
-        throw new Error(
-          `OpenAI API Error: ${
-            (error as { message?: string }).message || "Unknown API error"
-          } (${(error as { status?: unknown }).status})`
-        );
+      try {
+        onChunk({
+          content: "",
+          isComplete: true,
+          chunkIndex,
+          timestamp: new Date(),
+        });
+      } catch (error) {
+        console.error("Failed to send final chunk:", error);
       }
-      throw new Error(
-        `Chat service streaming error: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+    } catch (error) {
+      console.error("Streaming error in chatService:", error);
+
+      // Send error as a chunk instead of throwing
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown streaming error";
+      try {
+        onChunk({
+          content: `Error: ${errorMessage}`,
+          isComplete: true,
+          chunkIndex: 0,
+          timestamp: new Date(),
+        });
+      } catch (callbackError) {
+        console.log("Failed to send error chunk:", callbackError);
+      }
     }
   }
 

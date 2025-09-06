@@ -1,4 +1,4 @@
-import { Position, Node, Edge } from "../types";
+import { Position, Node, Edge, Conversation } from "../types";
 
 // Constants for node positioning
 export const NODE_SPACING = 100; // Vertical spacing between nodes
@@ -149,4 +149,35 @@ export function adjustPositionToBounds(
     x: Math.max(0, Math.min(position.x, canvasWidth - NODE_WIDTH)),
     y: Math.max(0, Math.min(position.y, canvasHeight - NODE_HEIGHT)),
   };
+}
+
+/**
+ * Find edges targeting a specific node and check for context snippets
+ * @param conversation - The conversation containing edges
+ * @param targetNodeId - The target node ID to find edges for
+ * @returns The context snippet if found, undefined otherwise
+ */
+export function findContextSnippetForNode(
+  conversation: Conversation,
+  targetNodeId: string
+): string | undefined {
+  // Find edges where targetNodeId matches the given nodeId
+  const incomingEdges = conversation.edges.filter(
+    (edge) => edge.targetNodeId === targetNodeId
+  );
+
+  // Check each incoming edge
+  for (const edge of incomingEdges) {
+    // If sourceHandle starts with "bottom-branch", skip this edge
+    if (edge.sourceHandle?.startsWith("bottom-branch")) {
+      continue;
+    }
+
+    // Check if the edge has metadata with contextSnippet
+    if (edge.metadata?.contextSnippet) {
+      return edge.metadata.contextSnippet;
+    }
+  }
+
+  return undefined;
 }

@@ -16,6 +16,7 @@ const chatRequestSchema = z.object({
   nodeId: z.string().min(1, "Node ID is required"),
   conversationId: z.string().min(1, "Conversation ID is required"),
   streaming: z.boolean().optional().default(false),
+  referenceContextSnippet: z.string().optional(),
 });
 
 // Handle streaming requests
@@ -24,9 +25,51 @@ async function handleStreamingRequest(chatRequest: StreamingChatRequest) {
     // Create a ReadableStream for HTTP streaming
     const stream = new ReadableStream({
       async start(controller) {
+        let isControllerClosed = false;
+
+        const safeEnqueue = (data: string) => {
+          if (isControllerClosed) {
+            return false;
+          }
+
+          try {
+            controller.enqueue(new TextEncoder().encode(data));
+            return true;
+          } catch (error) {
+            // If controller is closed externally, update our flag and stop processing
+            if (
+              error instanceof Error &&
+              error.message.includes("Controller is already closed")
+            ) {
+              console.log(
+                "Controller closed externally, stopping stream processing"
+              );
+              isControllerClosed = true;
+            } else {
+              console.error("Error enqueueing data:", error);
+            }
+            return false;
+          }
+        };
+
+        const closeController = () => {
+          if (!isControllerClosed) {
+            isControllerClosed = true;
+            try {
+              controller.close();
+            } catch (error) {
+              console.error("Error closing controller:", error);
+            }
+          }
+        };
+
         try {
           // Send streaming message to OpenAI
           await chatService.sendStreamingMessage(chatRequest, (chunk) => {
+            if (isControllerClosed) {
+              return;
+            }
+
             // Send chunk as JSON line
             const chunkData =
               JSON.stringify({
@@ -36,20 +79,29 @@ async function handleStreamingRequest(chatRequest: StreamingChatRequest) {
                 timestamp: chunk.timestamp.toISOString(),
               }) + "\n";
 
-            controller.enqueue(new TextEncoder().encode(chunkData));
+            // Try to enqueue, and if it fails, stop processing
+            if (!safeEnqueue(chunkData)) {
+              // If we can't enqueue, the controller is likely closed
+              return;
+            }
           });
 
-          // Close the stream
-          controller.close();
+          // Close the controller after streaming is complete (only if not already closed)
+          if (!isControllerClosed) {
+            closeController();
+          }
         } catch (error) {
           console.error("Streaming error:", error);
-          const errorData =
-            JSON.stringify({
-              error: error instanceof Error ? error.message : "Streaming error",
-              isComplete: true,
-            }) + "\n";
-          controller.enqueue(new TextEncoder().encode(errorData));
-          controller.close();
+          if (!isControllerClosed) {
+            const errorData =
+              JSON.stringify({
+                error:
+                  error instanceof Error ? error.message : "Streaming error",
+                isComplete: true,
+              }) + "\n";
+            safeEnqueue(errorData);
+            closeController();
+          }
         }
       },
     });
@@ -91,6 +143,7 @@ export async function POST(request: NextRequest) {
       nodeId: validatedData.nodeId,
       conversationId: validatedData.conversationId,
       streaming: validatedData.streaming,
+      referenceContextSnippet: validatedData.referenceContextSnippet,
     };
 
     // Handle streaming vs non-streaming requests

@@ -170,15 +170,38 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
   // Track element positions for stable IDs
   const elementPositions = React.useRef<Map<string, number>>(new Map());
+  const elementCounter = React.useRef<number>(0);
+
   const getElementPosition = (
     elementType: string,
     content: React.ReactNode
   ): number => {
-    const key = `${elementType}-${JSON.stringify(content)}`;
-    if (!elementPositions.current.has(key)) {
-      elementPositions.current.set(key, elementPositions.current.size);
+    try {
+      // Create a safer key by using a counter and content type instead of JSON.stringify
+      const contentKey = React.isValidElement(content)
+        ? content.type?.toString() || "element"
+        : typeof content === "string"
+        ? content.substring(0, 50) // Limit string length
+        : "unknown";
+
+      const key = `${elementType}-${contentKey}-${elementCounter.current++}`;
+
+      if (!elementPositions.current.has(key)) {
+        elementPositions.current.set(key, elementPositions.current.size);
+      }
+      return elementPositions.current.get(key)!;
+    } catch (error) {
+      // Fallback to a simple counter if there's any error
+      console.warn("Error generating element position key:", error);
+      const fallbackKey = `${elementType}-fallback-${elementCounter.current++}`;
+      if (!elementPositions.current.has(fallbackKey)) {
+        elementPositions.current.set(
+          fallbackKey,
+          elementPositions.current.size
+        );
+      }
+      return elementPositions.current.get(fallbackKey)!;
     }
-    return elementPositions.current.get(key)!;
   };
 
   return (

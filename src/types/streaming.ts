@@ -47,6 +47,7 @@ export interface StreamingChatRequest {
   nodeId: string;
   conversationId: string;
   streaming: boolean;
+  referenceContextSnippet?: string;
 }
 
 // Streaming chunk interface
