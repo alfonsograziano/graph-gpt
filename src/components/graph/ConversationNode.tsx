@@ -20,7 +20,7 @@ interface ConversationNodeProps {
 
 export const ConversationNode: React.FC<ConversationNodeProps> = ({
   node,
-  isActive = false,
+  isActive: propIsActive,
   onNodeClick,
   onMessageSubmit,
   onBranchCreate,
@@ -28,7 +28,19 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
   isStreaming = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const handleNodeClick = () => {
+
+  // Use the isActive prop directly, defaulting to false if undefined
+  const isActive = propIsActive ?? false;
+  const handleNodeClick = (e: React.MouseEvent) => {
+    // Don't trigger node click if clicking on buttons
+    // But allow clicks on input fields to still activate the node
+    if (
+      e.target instanceof HTMLButtonElement ||
+      (e.target as HTMLElement).closest("button")
+    ) {
+      return;
+    }
+
     if (onNodeClick) {
       onNodeClick(node.id);
     }
@@ -87,20 +99,24 @@ export const ConversationNode: React.FC<ConversationNodeProps> = ({
 
   const getNodeStyling = () => {
     const baseClasses =
-      "border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing";
-    const activeClasses = isActive ? "ring-2 ring-blue-500" : "";
+      "border rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing";
 
-    switch (node.type) {
-      case "input":
-        return `${baseClasses} bg-white ${activeClasses}`;
-      case "loading":
-        return `${baseClasses} bg-gray-200 ${activeClasses}`;
-      case "completed":
-        // Completed nodes have white background when active, light gray when inactive
-        const completedBg = isActive ? "bg-white" : "bg-gray-100";
-        return `${baseClasses} ${completedBg} ${activeClasses}`;
-      default:
-        return `${baseClasses} bg-gray-100 ${activeClasses}`;
+    if (isActive) {
+      const activeClasses =
+        "ring-2 ring-blue-500 ring-opacity-50 bg-white border-blue-400 shadow-lg";
+      return `${baseClasses} ${activeClasses}`;
+    } else {
+      const inactiveClasses = "border-gray-300";
+      switch (node.type) {
+        case "input":
+          return `${baseClasses} ${inactiveClasses} bg-gray-100`;
+        case "loading":
+          return `${baseClasses} ${inactiveClasses} bg-gray-200`;
+        case "completed":
+          return `${baseClasses} ${inactiveClasses} bg-gray-100`;
+        default:
+          return `${baseClasses} ${inactiveClasses} bg-gray-100`;
+      }
     }
   };
 

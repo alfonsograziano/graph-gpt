@@ -22,10 +22,12 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
   const {
     conversation,
     isLoading,
+    activeNodePath,
     updateConversation,
     createBranch,
     deleteNode,
     updateNodePosition,
+    setActiveNodePath,
   } = useConversation(conversationId);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(conversation?.title || "");
@@ -95,6 +97,10 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
     } catch (error) {
       console.error("Failed to update node position:", error);
     }
+  };
+
+  const handleNodeClick = (nodeId: string) => {
+    setActiveNodePath(nodeId);
   };
 
   const handleMessageSubmit = async (message: string, nodeId: string) => {
@@ -260,6 +266,8 @@ export const ConversationPage: React.FC<ConversationPageProps> = ({
         ) : (
           <GraphCanvas
             conversation={conversation}
+            activeNodePath={activeNodePath}
+            onNodeClick={handleNodeClick}
             onMessageSubmit={handleMessageSubmit}
             onBranchCreate={handleBranchCreate}
             onNodeDelete={handleNodeDelete}

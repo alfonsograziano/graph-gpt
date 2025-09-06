@@ -23,6 +23,7 @@ import { ConversationNode } from "./ConversationNode";
 
 interface GraphCanvasProps {
   conversation: Conversation;
+  activeNodePath: string[];
   onNodeClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
   onMessageSubmit?: (message: string, nodeId: string) => void;
@@ -37,11 +38,12 @@ interface GraphCanvasProps {
 // Custom node types - will be defined inline with wrapper
 
 const edgeTypes: EdgeTypes = {
-  // Will be expanded in future stories
+  // Use default React Flow edges
 };
 
 const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   conversation,
+  activeNodePath,
   onNodeClick,
   onEdgeClick,
   onMessageSubmit,
@@ -150,6 +152,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
       return (
         <ConversationNode
           node={data.node}
+          isActive={activeNodePath.includes(data.node.id)}
           onNodeClick={onNodeClick}
           onMessageSubmit={onMessageSubmit}
           onBranchCreate={handleBranchCreate}
@@ -157,7 +160,14 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         />
       );
     },
-    [onNodeClick, onMessageSubmit, onBranchCreate, onNodeDelete, getNode]
+    [
+      onNodeClick,
+      onMessageSubmit,
+      onBranchCreate,
+      onNodeDelete,
+      getNode,
+      activeNodePath,
+    ]
   );
 
   // Update node types with wrapper

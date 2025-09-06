@@ -6,11 +6,17 @@ import {
   createInputNode,
   createEdge,
 } from "@/utils/graphUtils";
+import {
+  calculatePathToRoot,
+  validatePath,
+  isNodeActive,
+} from "@/utils/graphTraversal";
 
 interface UseConversationReturn {
   conversation: Conversation | null;
   isLoading: boolean;
   error: string | null;
+  activeNodePath: string[];
   refetch: () => Promise<void>;
   updateConversation: (updates: Partial<Conversation>) => Promise<void>;
   createBranch: (
@@ -32,12 +38,16 @@ interface UseConversationReturn {
   }) => Promise<Edge | null>;
   deleteNode: (nodeId: string) => Promise<void>;
   updateNodePosition: (nodeId: string, position: Position) => Promise<void>;
+  setActiveNodePath: (nodeId: string) => void;
+  clearActivePath: () => void;
+  isNodeActive: (nodeId: string) => boolean;
 }
 
 export const useConversation = (id: string): UseConversationReturn => {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeNodePath, setActiveNodePathState] = useState<string[]>([]);
 
   const fetchConversation = useCallback(async () => {
     if (!id) return;
@@ -303,6 +313,54 @@ export const useConversation = (id: string): UseConversationReturn => {
     }
   };
 
+  // Set active node path by calculating path from clicked node to root
+  const setActiveNodePath = useCallback(
+    (nodeId: string) => {
+      if (!conversation) {
+        console.warn("No conversation available for path calculation");
+        return;
+      }
+
+      try {
+        const path = calculatePathToRoot(
+          nodeId,
+          conversation.nodes,
+          conversation.edges
+        );
+
+        // Validate the calculated path
+        if (validatePath(path, conversation.nodes, conversation.edges)) {
+          setActiveNodePathState(path);
+        } else {
+          console.warn("Invalid path calculated, not updating active path");
+        }
+      } catch (error) {
+        console.error("Error calculating active path:", error);
+        // Clear the active path on error
+        setActiveNodePathState([]);
+      }
+    },
+    [conversation]
+  );
+
+  // Clear active path
+  const clearActivePath = useCallback(() => {
+    setActiveNodePathState([]);
+  }, []);
+
+  // Check if a node is active
+  const isNodeActiveCallback = useCallback(
+    (nodeId: string): boolean => {
+      return isNodeActive(nodeId, activeNodePath);
+    },
+    [activeNodePath]
+  );
+
+  // Clear active path when conversation changes
+  useEffect(() => {
+    setActiveNodePathState([]);
+  }, [conversation?.id]);
+
   useEffect(() => {
     fetchConversation();
   }, [id, fetchConversation]);
@@ -311,6 +369,7 @@ export const useConversation = (id: string): UseConversationReturn => {
     conversation, //testConversation,
     isLoading,
     error,
+    activeNodePath,
     refetch: fetchConversation,
     updateConversation,
     createBranch,
@@ -318,5 +377,8 @@ export const useConversation = (id: string): UseConversationReturn => {
     addEdge,
     deleteNode,
     updateNodePosition,
+    setActiveNodePath,
+    clearActivePath,
+    isNodeActive: isNodeActiveCallback,
   };
 };
