@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
 import { ConversationContextType } from "@/types";
 import { useConversation } from "@/hooks/useConversation";
 
@@ -22,6 +28,23 @@ export const ConversationProvider: React.FC<ConversationProviderProps> = ({
   // Use the existing working hook
   const conversationHook = useConversation(conversationId);
 
+  // Local state for UI-specific features
+  const [streamingEnabled, setStreamingEnabled] = useState(false);
+
+  // Load streaming preference from localStorage on mount
+  useEffect(() => {
+    const savedPreference = localStorage.getItem("streaming-enabled");
+    if (savedPreference !== null) {
+      setStreamingEnabled(savedPreference === "true");
+    }
+  }, []);
+
+  // Save streaming preference to localStorage when changed
+  const handleStreamingToggle = (enabled: boolean) => {
+    setStreamingEnabled(enabled);
+    localStorage.setItem("streaming-enabled", enabled.toString());
+  };
+
   // Map the hook's return type to our context type
   const contextValue: ConversationContextType = {
     // State
@@ -29,6 +52,7 @@ export const ConversationProvider: React.FC<ConversationProviderProps> = ({
     isLoading: conversationHook.isLoading,
     error: conversationHook.error,
     activeNodePath: conversationHook.activeNodePath,
+    streamingEnabled,
 
     // Actions - map to existing hook methods
     loadConversation: async (id: string) => {
@@ -79,6 +103,17 @@ export const ConversationProvider: React.FC<ConversationProviderProps> = ({
     },
     deleteNode: conversationHook.deleteNode,
     updateNodePosition: conversationHook.updateNodePosition,
+
+    // UI Actions
+    updateTitle: async (title: string) => {
+      if (conversationHook.conversation) {
+        await conversationHook.updateConversation({
+          ...conversationHook.conversation,
+          title,
+        });
+      }
+    },
+    setStreamingEnabled: handleStreamingToggle,
   };
 
   return (

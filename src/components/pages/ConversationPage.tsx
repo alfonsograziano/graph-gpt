@@ -26,12 +26,10 @@ export const ConversationPage: React.FC = () => {
     deleteNode,
     updateNodePosition,
     setActiveNodePath,
+    streamingEnabled,
   } = useConversationContext();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [title, setTitle] = useState(conversation?.title || "");
-  const [isSaving, setIsSaving] = useState(false);
   const [isSubmittingMessage, setIsSubmittingMessage] = useState(false);
-  const [streamingEnabled, setStreamingEnabled] = useState(false);
   const [streamingNodeId, setStreamingNodeId] = useState<string | null>(null);
   const [streamingContent, setStreamingContent] = useState<string>("");
   const hasUpdatedToStreaming = useRef(false);
@@ -136,28 +134,7 @@ export const ConversationPage: React.FC = () => {
     router.push("/");
   };
 
-  const handleTitleSave = async (newTitle: string) => {
-    if (newTitle.trim() === conversation?.title) {
-      setIsEditingTitle(false);
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await updateConversation({ title: newTitle });
-      setTitle(newTitle);
-      setIsEditingTitle(false);
-    } catch (error) {
-      console.error("Failed to update title:", error);
-      // Revert title on error
-      setTitle(conversation?.title || "");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleTitleCancel = () => {
-    setTitle(conversation?.title || "");
     setIsEditingTitle(false);
   };
 
@@ -437,8 +414,6 @@ export const ConversationPage: React.FC = () => {
   }, [isStreaming, isGenerating]);
 
   useEffect(() => {
-    setTitle(conversation?.title || "");
-
     // If conversation has no nodes, create a default input node
     if (conversation && conversation.nodes.length === 0) {
       const defaultNode: Node = {
@@ -478,18 +453,13 @@ export const ConversationPage: React.FC = () => {
           </Button>
           <div className="flex items-center space-x-2">
             {isEditingTitle ? (
-              <EditableTitle
-                value={title}
-                onSave={handleTitleSave}
-                onCancel={handleTitleCancel}
-                isLoading={isSaving}
-              />
+              <EditableTitle onCancel={handleTitleCancel} />
             ) : (
               <button
                 onClick={() => setIsEditingTitle(true)}
                 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
               >
-                {title}
+                {conversation?.title}
               </button>
             )}
           </div>
@@ -521,10 +491,7 @@ export const ConversationPage: React.FC = () => {
       </div>
 
       {/* Streaming Toggle */}
-      <StreamingToggle
-        enabled={streamingEnabled}
-        onToggle={setStreamingEnabled}
-      />
+      <StreamingToggle />
     </div>
   );
 };

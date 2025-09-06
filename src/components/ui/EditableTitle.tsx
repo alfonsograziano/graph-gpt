@@ -1,27 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { useConversationContext } from "@/context";
 
 interface EditableTitleProps {
-  value: string;
-  onSave: (newValue: string) => void;
   onCancel: () => void;
-  isLoading?: boolean;
   placeholder?: string;
   maxLength?: number;
 }
 
 export const EditableTitle: React.FC<EditableTitleProps> = ({
-  value,
-  onSave,
   onCancel,
-  isLoading = false,
   placeholder = "Enter title...",
   maxLength = 100,
 }) => {
-  const [inputValue, setInputValue] = useState(value);
+  const { conversation, isLoading, updateTitle } = useConversationContext();
+  const [inputValue, setInputValue] = useState(conversation?.title || "");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,17 +27,23 @@ export const EditableTitle: React.FC<EditableTitleProps> = ({
     }
   }, []);
 
-  const handleSave = () => {
-    const trimmedValue = inputValue.trim();
-    if (trimmedValue && trimmedValue !== value.trim()) {
-      onSave(trimmedValue);
-    } else {
-      onCancel();
+  // Update input value when conversation title changes
+  useEffect(() => {
+    if (conversation?.title) {
+      setInputValue(conversation.title);
     }
+  }, [conversation?.title]);
+
+  const handleSave = async () => {
+    const trimmedValue = inputValue.trim();
+    if (trimmedValue && trimmedValue !== conversation?.title?.trim()) {
+      await updateTitle(trimmedValue);
+    }
+    onCancel();
   };
 
   const handleCancel = () => {
-    setInputValue(value);
+    setInputValue(conversation?.title || "");
     onCancel();
   };
 
@@ -82,7 +84,7 @@ export const EditableTitle: React.FC<EditableTitleProps> = ({
           disabled={
             isLoading ||
             !inputValue.trim() ||
-            inputValue.trim() === value.trim()
+            inputValue.trim() === conversation?.title?.trim()
           }
           className="text-green-600 hover:text-green-700 hover:bg-green-50"
         >

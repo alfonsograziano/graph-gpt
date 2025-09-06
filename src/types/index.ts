@@ -181,6 +181,7 @@ export interface ConversationContextState {
   isLoading: boolean;
   error: string | null;
   activeNodePath: string[];
+  streamingEnabled: boolean;
 }
 
 export interface ConversationContextType {
@@ -189,6 +190,7 @@ export interface ConversationContextType {
   isLoading: boolean;
   error: string | null;
   activeNodePath: string[];
+  streamingEnabled: boolean;
 
   // Actions
   loadConversation: (conversationId: string) => Promise<void>;
@@ -211,6 +213,10 @@ export interface ConversationContextType {
     nodeId: string,
     position: { x: number; y: number }
   ) => Promise<void>;
+
+  // UI Actions
+  updateTitle: (title: string) => Promise<void>;
+  setStreamingEnabled: (enabled: boolean) => void;
 }
 
 export type ConversationContextAction =
