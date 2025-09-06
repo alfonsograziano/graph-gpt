@@ -74,49 +74,25 @@ export const ConversationPage: React.FC = () => {
   }, [conversation, updateConversation]);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBackToHome}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            ← Back
-          </Button>
-          <div className="flex items-center space-x-2">
-            {isEditingTitle ? (
-              <EditableTitle onCancel={handleTitleCancel} />
-            ) : (
-              <button
-                onClick={() => setIsEditingTitle(true)}
-                className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-              >
-                {conversation?.title}
-              </button>
-            )}
-          </div>
+    <div className="h-screen bg-gray-50">
+      {isLoading || !conversation ? (
+        <div className="flex justify-center items-center h-full">
+          <LoadingSpinner />
         </div>
-      </div>
-
-      {/* Canvas Area */}
-      <div className="flex-1 relative">
-        {isLoading || !conversation ? (
-          <div className="flex justify-center items-center h-full">
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <GraphCanvas
-            conversation={conversation}
-            activeNodePath={activeNodePath}
-            onNodeClick={handleNodeClick}
-            onNodePositionUpdate={handleNodePositionUpdate}
-            createNodeAtPosition={createNodeAtPosition}
-          />
-        )}
-      </div>
+      ) : (
+        <GraphCanvas
+          conversation={conversation}
+          activeNodePath={activeNodePath}
+          onNodeClick={handleNodeClick}
+          onNodePositionUpdate={handleNodePositionUpdate}
+          createNodeAtPosition={createNodeAtPosition}
+          conversationTitle={conversation.title}
+          onBackToHome={handleBackToHome}
+          onTitleEdit={() => setIsEditingTitle(true)}
+          onTitleCancel={handleTitleCancel}
+          isEditingTitle={isEditingTitle}
+        />
+      )}
 
       {/* Streaming Toggle */}
       <StreamingToggle />

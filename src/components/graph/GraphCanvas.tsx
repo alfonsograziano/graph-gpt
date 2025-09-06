@@ -6,6 +6,8 @@ import ReactFlow, {
   Edge,
   Controls,
   Background,
+  MiniMap,
+  Panel,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -22,6 +24,7 @@ import { Conversation, ReactFlowEdge, Node, Position } from "@/types";
 import { ConversationNode } from "./ConversationNode";
 import { ActiveEdge } from "./ActiveEdge";
 import { ContextMenu } from "./ContextMenu";
+import { EditableTitle } from "@/components/ui/EditableTitle";
 import { isEdgeActive } from "@/utils/graphTraversal";
 
 interface GraphCanvasProps {
@@ -34,6 +37,12 @@ interface GraphCanvasProps {
     position: { x: number; y: number }
   ) => void;
   createNodeAtPosition?: (position: Position) => Promise<Node | null>;
+  // Navbar props
+  conversationTitle?: string;
+  onBackToHome?: () => void;
+  onTitleEdit?: () => void;
+  onTitleCancel?: () => void;
+  isEditingTitle?: boolean;
 }
 
 // Custom node types - will be defined inline with wrapper
@@ -49,6 +58,11 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   onEdgeClick,
   onNodePositionUpdate,
   createNodeAtPosition,
+  conversationTitle,
+  onBackToHome,
+  onTitleEdit,
+  onTitleCancel,
+  isEditingTitle,
 }) => {
   const { getNode, screenToFlowPosition } = useReactFlow();
 
@@ -251,7 +265,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
   );
 
   return (
-    <div className="w-full h-full min-h-screen bg-gray-50">
+    <div className="w-full h-screen bg-gray-50">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -283,8 +297,7 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
         className="w-full h-full"
         style={{
           width: "100%",
-          height: "100%",
-          minHeight: "100vh",
+          height: "100vh",
         }}
       >
         <Controls
@@ -292,12 +305,53 @@ const GraphCanvasInner: React.FC<GraphCanvasProps> = ({
           showInteractive={false}
           className="bg-white shadow-lg border border-gray-200 rounded-lg"
         />
+        <MiniMap
+          position="bottom-right"
+          nodeStrokeColor={(node) => {
+            return node.selected ? "#3b82f6" : "#374151";
+          }}
+          nodeBorderRadius={8}
+          maskColor="rgba(0, 0, 0, 0.1)"
+          className="bg-white border border-gray-200 rounded-lg shadow-lg"
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+          }}
+        />
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
           size={1}
           color="#e5e7eb"
         />
+
+        {/* Navbar Panel */}
+        {conversationTitle && onBackToHome && (
+          <Panel
+            position="top-left"
+            className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 w-[700px]"
+          >
+            <div className="px-4 py-3 flex items-center space-x-4">
+              <button
+                onClick={onBackToHome}
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                ← Back
+              </button>
+              <div className="flex items-center space-x-2">
+                {isEditingTitle ? (
+                  <EditableTitle onCancel={onTitleCancel || (() => {})} />
+                ) : (
+                  <button
+                    onClick={onTitleEdit}
+                    className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                  >
+                    {conversationTitle}
+                  </button>
+                )}
+              </div>
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
 
       <ContextMenu
